@@ -191,7 +191,7 @@ class _PhotoSection extends StatelessWidget {
     }
 
     return Container(
-      height: 220,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
