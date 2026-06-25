@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/supabase_service.dart';
+import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
 
+// ── AuthScreen ────────────────────────────────────────────────────────────────
+// Le StreamBuilder dans _AuthGate gère la navigation automatiquement :
+// • Après signIn/signUp réussi → Auth émet un nouvel user → _RootNav s'affiche
+// • Pas besoin de Navigator.push/pop ici
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
   @override
@@ -11,24 +14,15 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-  final _loginFormKey    = GlobalKey<FormState>();
-  final _registerFormKey = GlobalKey<FormState>();
-  bool _loading = false;
+  late TabController _tabs;
+  final _emailCtrl   = TextEditingController();
+  final _passCtrl    = TextEditingController();
+  final _nameCtrl    = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+  bool _loading  = false;
+  bool _showPass = false;
   String? _error;
-
-  // Login
-  final _emailCtrl    = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-
-  // Register
-  final _regEmailCtrl    = TextEditingController();
-  final _regPasswordCtrl = TextEditingController();
-  final _usernameCtrl    = TextEditingController();
-  final _fullNameCtrl    = TextEditingController();
-
-  bool _obscureLogin = true;
-  bool _obscureReg   = true;
+  String _selectedRole = 'patient';
 
   @override
   void initState() {
@@ -40,338 +34,299 @@ class _AuthScreenState extends State<AuthScreen>
   @override
   void dispose() {
     _tabs.dispose();
-    _emailCtrl.dispose(); _passwordCtrl.dispose();
-    _regEmailCtrl.dispose(); _regPasswordCtrl.dispose();
-    _usernameCtrl.dispose(); _fullNameCtrl.dispose();
+    _emailCtrl.dispose(); _passCtrl.dispose();
+    _nameCtrl.dispose();  _confirmCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_loginFormKey.currentState!.validate()) return;
+  // ── Sign In ─────────────────────────────────────────────────────────────────
+  Future<void> _signIn() async {
+    if (_emailCtrl.text.trim().isEmpty || _passCtrl.text.isEmpty) {
+      setState(() => _error = 'Remplissez tous les champs'); return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
-      await SupabaseService.instance.signIn(
-        email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
-      );
-    } on AuthException catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = 'Erreur de connexion. Vérifiez votre réseau.');
+      await FirebaseService.instance.signIn(
+          email: _emailCtrl.text, password: _passCtrl.text);
+      // ← pas de Navigator ici : _AuthGate bascule automatiquement
+    } catch (e) {
+      setState(() => _error = _msg(e.toString()));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _register() async {
-    if (!_registerFormKey.currentState!.validate()) return;
+  // ── Sign Up ─────────────────────────────────────────────────────────────────
+  Future<void> _signUp() async {
+    if (_nameCtrl.text.trim().isEmpty ||
+        _emailCtrl.text.trim().isEmpty ||
+        _passCtrl.text.isEmpty) {
+      setState(() => _error = 'Remplissez tous les champs'); return;
+    }
+    if (_passCtrl.text != _confirmCtrl.text) {
+      setState(() => _error = 'Les mots de passe ne correspondent pas'); return;
+    }
+    if (_passCtrl.text.length < 6) {
+      setState(() => _error = 'Mot de passe trop court (6 car. min.)'); return;
+    }
     setState(() { _loading = true; _error = null; });
     try {
-      await SupabaseService.instance.signUp(
-        email:    _regEmailCtrl.text.trim(),
-        password: _regPasswordCtrl.text,
-        username: _usernameCtrl.text.trim(),
-        fullName: _fullNameCtrl.text.trim(),
-      );
-    } on AuthException catch (e) {
-      setState(() => _error = e.message);
-    } catch (_) {
-      setState(() => _error = 'Erreur lors de la création du compte.');
+      await FirebaseService.instance.signUp(
+          email: _emailCtrl.text,
+          password: _passCtrl.text,
+          fullName: _nameCtrl.text.trim(),
+          userType: _selectedRole);
+      // ← _AuthGate bascule automatiquement après signUp
+    } catch (e) {
+      setState(() => _error = _msg(e.toString()));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  // ── Reset password ──────────────────────────────────────────────────────────
+  Future<void> _resetPassword() async {
+    if (_emailCtrl.text.trim().isEmpty) {
+      setState(() => _error = 'Entrez votre email d\'abord'); return;
+    }
+    try {
+      await FirebaseService.instance.resetPassword(_emailCtrl.text);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Email de réinitialisation envoyé'),
+        backgroundColor: AppTheme.success,
+      ));
+    } catch (e) {
+      setState(() => _error = _msg(e.toString()));
+    }
+  }
+
+  String _msg(String e) {
+    if (e.contains('user-not-found') || e.contains('wrong-password') ||
+        e.contains('invalid-credential')) return 'Email ou mot de passe incorrect';
+    if (e.contains('email-already-in-use')) return 'Cet email est déjà utilisé';
+    if (e.contains('weak-password'))   return 'Mot de passe trop faible';
+    if (e.contains('invalid-email'))   return 'Email invalide';
+    if (e.contains('network'))         return 'Vérifiez votre connexion internet';
+    return 'Erreur : ${e.replaceAll(RegExp(r'\[.*?\]'), '').trim()}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bgColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
-          child: Column(
-            children: [
-              // ── Logo ──────────────────────────────────────────
-              const _Logo(),
-              const SizedBox(height: 36),
+      body: SafeArea(child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
+        child: Column(children: [
 
-              // ── Tabs ──────────────────────────────────────────
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 20, offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _TabBar(controller: _tabs),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                      child: SizedBox(
-                        height: _tabs.index == 0 ? 260 : 360,
-                        child: TabBarView(
-                          controller: _tabs,
-                          children: [
-                            _LoginForm(
-                              formKey:       _loginFormKey,
-                              emailCtrl:     _emailCtrl,
-                              passwordCtrl:  _passwordCtrl,
-                              obscure:       _obscureLogin,
-                              onToggle:      () => setState(() => _obscureLogin = !_obscureLogin),
-                              onSubmit:      _login,
-                            ),
-                            _RegisterForm(
-                              formKey:       _registerFormKey,
-                              emailCtrl:     _regEmailCtrl,
-                              passwordCtrl:  _regPasswordCtrl,
-                              usernameCtrl:  _usernameCtrl,
-                              fullNameCtrl:  _fullNameCtrl,
-                              obscure:       _obscureReg,
-                              onToggle:      () => setState(() => _obscureReg = !_obscureReg),
-                              onSubmit:      _register,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Error
-                    if (_error != null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.danger.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppTheme.danger.withOpacity(0.3)),
-                          ),
-                          child: Row(children: [
-                            const Icon(Icons.error_outline_rounded,
-                                color: AppTheme.danger, size: 16),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_error!,
-                                style: const TextStyle(
-                                    color: AppTheme.danger, fontSize: 13))),
-                          ]),
-                        ),
-                      ),
-
-                    // Submit button
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: _SubmitButton(
-                        label: _tabs.index == 0 ? 'Se connecter' : 'Créer mon compte',
-                        loading: _loading,
-                        onTap: _tabs.index == 0 ? _login : _register,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // ── Logo ─────────────────────────────────────────────────────────
+          Container(
+            width: 82, height: 82,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [AppTheme.primary, AppTheme.secondary],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [BoxShadow(
+                  color: AppTheme.primary.withOpacity(0.3),
+                  blurRadius: 20, offset: const Offset(0, 8))],
+            ),
+            child: const Icon(Icons.favorite_rounded,
+                color: Colors.white, size: 42),
           ),
-        ),
-      ),
-    );
-  }
-}
+          const SizedBox(height: 18),
+          Text('Sahtek',
+              style: AppFonts.bold(size: 28, color: AppTheme.primary)),
+          Text('Votre santé, sécurisée',
+              style: AppFonts.body(color: Colors.grey, size: 14)),
+          const SizedBox(height: 30),
 
-// ── Logo ─────────────────────────────────────────────────────────────────────
-class _Logo extends StatelessWidget {
-  const _Logo();
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      Container(
-        width: 80, height: 80,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.primary, AppTheme.secondary],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
+          // ── Tabs ──────────────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10)]),
+            child: TabBar(
+              controller: _tabs,
+              indicator: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(11)),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey,
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: 'Connexion'),
+                Tab(text: 'Inscription'),
+              ],
+            ),
           ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(
-            color: AppTheme.primary.withOpacity(0.35),
-            blurRadius: 20, offset: const Offset(0, 8),
-          )],
-        ),
-        child: const Icon(Icons.monitor_heart_rounded,
-            color: Colors.white, size: 44),
-      ),
-      const SizedBox(height: 16),
-      const Text('Sahtek',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
-              color: AppTheme.primary, letterSpacing: 0.5)),
-      const SizedBox(height: 4),
-      Text('Suivi de glycémie connecté',
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 14)),
-    ]);
-  }
-}
+          const SizedBox(height: 20),
 
-// ── Tab bar ──────────────────────────────────────────────────────────────────
-class _TabBar extends StatelessWidget {
-  final TabController controller;
-  const _TabBar({required this.controller});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      decoration: BoxDecoration(
-        color: AppTheme.bgColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TabBar(
-        controller: controller,
-        indicator: BoxDecoration(
-          color: AppTheme.primary,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey,
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        dividerColor: Colors.transparent,
-        tabs: const [Tab(text: 'Connexion'), Tab(text: 'Inscription')],
-      ),
-    );
-  }
-}
+          // ── Erreur ────────────────────────────────────────────────────────
+          if (_error != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: AppTheme.danger.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppTheme.danger.withOpacity(0.3))),
+              child: Row(children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: AppTheme.danger, size: 18),
+                const SizedBox(width: 8),
+                Expanded(child: Text(_error!,
+                    style: AppFonts.body(
+                        color: AppTheme.danger, size: 13))),
+              ]),
+            ),
+            const SizedBox(height: 12),
+          ],
 
-// ── Login form ───────────────────────────────────────────────────────────────
-class _LoginForm extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController emailCtrl, passwordCtrl;
-  final bool obscure;
-  final VoidCallback onToggle, onSubmit;
-  const _LoginForm({required this.formKey, required this.emailCtrl,
-      required this.passwordCtrl, required this.obscure,
-      required this.onToggle, required this.onSubmit});
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _Field(ctrl: emailCtrl, label: 'Email',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              validator: (v) => (v?.contains('@') ?? false) ? null : 'Email invalide'),
-          const SizedBox(height: 14),
-          _Field(ctrl: passwordCtrl, label: 'Mot de passe',
-              icon: Icons.lock_outline_rounded,
-              obscure: obscure, onToggle: onToggle,
-              validator: (v) => (v?.length ?? 0) >= 6 ? null : '6 caractères minimum'),
-        ],
-      ),
-    );
-  }
-}
+          // ── Formulaires ───────────────────────────────────────────────────
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: _tabs.index == 0 ? 220 : 385,
+            child: TabBarView(controller: _tabs, children: [
 
-// ── Register form ─────────────────────────────────────────────────────────────
-class _RegisterForm extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController emailCtrl, passwordCtrl, usernameCtrl, fullNameCtrl;
-  final bool obscure;
-  final VoidCallback onToggle, onSubmit;
-  const _RegisterForm({required this.formKey, required this.emailCtrl,
-      required this.passwordCtrl, required this.usernameCtrl,
-      required this.fullNameCtrl, required this.obscure,
-      required this.onToggle, required this.onSubmit});
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _Field(ctrl: fullNameCtrl, label: 'Nom complet',
-              icon: Icons.person_outline_rounded,
-              validator: (v) => (v?.isNotEmpty ?? false) ? null : 'Requis'),
-          const SizedBox(height: 12),
-          _Field(ctrl: usernameCtrl, label: 'Nom d\'utilisateur',
-              icon: Icons.alternate_email_rounded,
-              validator: (v) => (v?.length ?? 0) >= 3 ? null : '3 caractères minimum'),
-          const SizedBox(height: 12),
-          _Field(ctrl: emailCtrl, label: 'Email',
-              icon: Icons.email_outlined,
-              keyboardType: TextInputType.emailAddress,
-              validator: (v) => (v?.contains('@') ?? false) ? null : 'Email invalide'),
-          const SizedBox(height: 12),
-          _Field(ctrl: passwordCtrl, label: 'Mot de passe',
-              icon: Icons.lock_outline_rounded,
-              obscure: obscure, onToggle: onToggle,
-              validator: (v) => (v?.length ?? 0) >= 6 ? null : '6 caractères minimum'),
-        ],
-      ),
-    );
-  }
-}
+              // ── Connexion ──────────────────────────────────────────────
+              Column(children: [
+                TextField(
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email_rounded, size: 18))),
+                const SizedBox(height: 12),
+                TextField(
+                    controller: _passCtrl,
+                    obscureText: !_showPass,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _signIn(),
+                    decoration: InputDecoration(
+                        labelText: 'Mot de passe',
+                        prefixIcon: const Icon(Icons.lock_rounded, size: 18),
+                        suffixIcon: IconButton(
+                            icon: Icon(_showPass
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded, size: 18),
+                            onPressed: () =>
+                                setState(() => _showPass = !_showPass)))),
+                const SizedBox(height: 4),
+                Align(alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _resetPassword,
+                    child: Text('Mot de passe oublié ?',
+                        style: AppFonts.label(
+                            color: AppTheme.primary, size: 12)),
+                  ),
+                ),
+              ]),
 
-// ── Reusable field ────────────────────────────────────────────────────────────
-class _Field extends StatelessWidget {
-  final TextEditingController ctrl;
-  final String label;
-  final IconData icon;
-  final bool obscure;
-  final VoidCallback? onToggle;
-  final String? Function(String?)? validator;
-  final TextInputType? keyboardType;
-  const _Field({required this.ctrl, required this.label, required this.icon,
-      this.obscure = false, this.onToggle, this.validator, this.keyboardType});
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: ctrl,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 18, color: AppTheme.primary),
-        suffixIcon: onToggle != null
-            ? IconButton(
-                onPressed: onToggle,
-                icon: Icon(obscure ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined, size: 18),
-              )
-            : null,
-      ),
-    );
-  }
-}
+              // ── Inscription ───────────────────
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // Sélecteur de rôle
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300)),
+                  child: Row(children: ['patient', 'doctor'].map((r) {
+                    final sel = _selectedRole == r;
+                    return Expanded(child: GestureDetector(
+                      onTap: () => setState(() => _selectedRole = r),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                            color: sel ? AppTheme.primary : Colors.transparent,
+                            borderRadius: BorderRadius.circular(9)),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                          Icon(r == 'doctor'
+                              ? Icons.medical_services_rounded : Icons.person_rounded,
+                              size: 14,
+                              color: sel ? Colors.white : Colors.grey),
+                          const SizedBox(width: 5),
+                          Text(r == 'patient' ? 'Patient' : 'Médecin',
+                              style: AppFonts.label(
+                                  color: sel ? Colors.white : Colors.grey, size: 12)
+                                  .copyWith(fontWeight: sel
+                                      ? FontWeight.w700 : FontWeight.normal)),
+                        ]),
+                      ),
+                    ));
+                  }).toList()),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: _nameCtrl,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                        labelText: 'Nom complet',
+                        prefixIcon: Icon(Icons.person_rounded, size: 18))),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email_rounded, size: 18))),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: _passCtrl,
+                    obscureText: !_showPass,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                        labelText: 'Mot de passe (6 car. min)',
+                        prefixIcon: const Icon(Icons.lock_rounded, size: 18),
+                        suffixIcon: IconButton(
+                            icon: Icon(_showPass
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded, size: 18),
+                            onPressed: () =>
+                                setState(() => _showPass = !_showPass)))),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: _confirmCtrl,
+                    obscureText: !_showPass,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _signUp(),
+                    decoration: const InputDecoration(
+                        labelText: 'Confirmer le mot de passe',
+                        prefixIcon: Icon(
+                            Icons.lock_outline_rounded, size: 18))),
+              ]),
+            ]),
+          ),
 
-// ── Submit button ─────────────────────────────────────────────────────────────
-class _SubmitButton extends StatelessWidget {
-  final String label;
-  final bool loading;
-  final VoidCallback onTap;
-  const _SubmitButton({required this.label, required this.loading, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: loading ? null : onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
-        ),
-        child: loading
-            ? const SizedBox(width: 22, height: 22,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-            : Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-      ),
+          // ── Bouton principal ──────────────────────────────────────────────
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _loading ? null
+                  : () { if (_tabs.index == 0) _signIn(); else _signUp(); },
+              style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16)),
+              child: _loading
+                  ? const SizedBox(width: 22, height: 22,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2))
+                  : Text(_tabs.index == 0
+                  ? 'Se connecter' : 'Créer mon compte',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ]),
+      )),
     );
   }
 }

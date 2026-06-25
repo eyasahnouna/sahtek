@@ -9,17 +9,44 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # State management
   provider: ^6.1.2
+
+  # Charts
   fl_chart: ^0.66.2
+
+  # Notifications
   flutter_local_notifications: ^17.2.2
-  shared_preferences: ^2.3.2
-  table_calendar: ^3.1.2
-  intl: ^0.19.0
   timezone: ^0.9.4
+
+  # Firebase — Auth + Firestore + Core
+  firebase_core: ^3.3.0
+  firebase_auth: ^5.1.4
+  cloud_firestore: ^5.2.1
+
+  # Local cache (pour fonctionner hors-ligne)
+  shared_preferences: ^2.3.2
+
+  # Calendar
+  table_calendar: ^3.1.2
+
+  # Camera & OCR
+  image_picker: ^1.1.2
+  google_mlkit_text_recognition: ^0.13.1
+
+  # HTTP client (appels backend Spring Boot)
+  http: ^1.2.2
+
+  # Utils
+  intl: ^0.19.0
   uuid: ^4.5.1
-  supabase_flutter: ^2.5.6
   google_fonts: ^6.2.1
   cupertino_icons: ^1.0.8
+  mailer: ^7.1.0
+  firebase_storage: ^12.4.10
+  pdf: ^3.12.0
+  printing: ^5.14.3
 
 dev_dependencies:
   flutter_test:

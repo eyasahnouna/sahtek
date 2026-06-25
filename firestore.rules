@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Profils utilisateurs ────────────────────────────────────────────────
+    // Chaque utilisateur peut lire et écrire uniquement son propre profil
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // ── Registres journaliers ─────────────────────────────────────────────
+      match /records/{dateKey} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+        // Collaborateurs acceptés peuvent lire (pas écrire)
+        allow read: if request.auth != null && estCollaborateurAccepte(uid);
+      }
+
+      // ── Lectures glycémie ─────────────────────────────────────────────────
+      match /glucose_readings/{readingId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read: if request.auth != null && estCollaborateurAccepte(uid);
+      }
+
+      // ── Doses insuline ────────────────────────────────────────────────────
+      match /insulin_doses/{doseId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read: if request.auth != null && estCollaborateurAccepte(uid);
+      }
+    }
+
+    // ── Collaborateurs ──────────────────────────────────────────────────────
+    match /collaborators/{docId} {
+      // Lire : propriétaire OU personne invitée
+      allow read: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.email == request.auth.token.email
+      );
+
+      // Créer : uniquement le propriétaire, et seulement les champs autorisés
+      allow create: if request.auth != null
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.role in ['doctor', 'viewer']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.email != request.auth.token.email;
+
+      // Mettre à jour : statut uniquement par la personne invitée
+      allow update: if request.auth != null
+        && resource.data.email == request.auth.token.email
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'acceptedAt'])
+        && request.resource.data.status in ['accepted', 'rejected'];
+
+      // Supprimer : uniquement le propriétaire
+      allow delete: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+    }
+  }
+
+  // ── Fonction helper : est-ce un collaborateur accepté ? ──────────────────
+  function estCollaborateurAccepte(uidProprietaire) {
+    return exists(/databases/$(database)/documents/collaborators/$(
+      request.auth.uid + '_' + uidProprietaire
+    )) == false
+    ? false
+    : get(/databases/$(database)/documents/collaborators/$(
+        request.auth.uid + '_' + uidProprietaire
+      )).data.status == 'accepted';
+  }
+}

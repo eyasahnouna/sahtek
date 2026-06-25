@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Users\\\\User\\\\Downloads\\\\sahtekbackend\\\\sahtek\" 2>/dev/null || echo \"VIDE\")",
+      "Read(//c/Users/User/Downloads/sahtekbackend/sahtek/**)",
+      "PowerShell(Rename-Item \"C:\\\\Users\\\\User\\\\Downloads\\\\sahtekbackend\\\\sahtek\\\\src\\\\main\\\\resources\\\\firebase-service-account.json.json\" \"firebase-service-account.json\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\User\\Downloads\\sahtekbackend\\sahtek"
+    ]
+  }
+}

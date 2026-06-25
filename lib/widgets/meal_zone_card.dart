@@ -84,14 +84,21 @@ class _MealZoneCardState extends State<MealZoneCard>
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
+// ── Header ─────────────────────────────────────────────────────────────────────
 class _Header extends StatelessWidget {
   final MealEntry entry;
   final Color accent;
   final bool expanded;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
-  const _Header({required this.entry, required this.accent,
-    required this.expanded, required this.onTap, this.onDelete});
+
+  const _Header({
+    required this.entry,
+    required this.accent,
+    required this.expanded,
+    required this.onTap,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -110,38 +117,44 @@ class _Header extends StatelessWidget {
         child: Row(children: [
           Icon(entry.type.icon, color: Colors.white, size: 20),
           const SizedBox(width: 10),
-          Expanded(child: Text(entry.name,
-              style: AppFonts.title(color: Colors.white, size: 15))),
-          // Chips résumé dans le header
+          Expanded(
+            child: Text(
+              entry.name,
+              style: AppFonts.title(color: Colors.white, size: 15),
+            ),
+          ),
+          // Chips résumé
           if (entry.hasGlycemie) ...[
             _HeaderChip(
               icon: Icons.bloodtype_rounded,
-              value: '${entry.glycemieAffichee} Mg/dl',
+              value: '${entry.glycemieAffichee!.toStringAsFixed(1)} Mg/dl',
             ),
             const SizedBox(width: 6),
           ],
           if (entry.hasDose) ...[
             _HeaderChip(
               icon: Icons.medication_rounded,
-              value: '${entry.dose} UI',
+              value: '${entry.dose!.toStringAsFixed(1)} UI',
             ),
             const SizedBox(width: 6),
           ],
           if (onDelete != null)
             GestureDetector(
               onTap: onDelete,
-              child: const Padding(padding: EdgeInsets.only(right: 4),
-                  child: Icon(Icons.close_rounded,
-                      color: Colors.white70, size: 18)),
+              child: const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Icon(Icons.close_rounded, color: Colors.white70, size: 18),
+              ),
             ),
-          Icon(expanded ? Icons.keyboard_arrow_up_rounded
-              : Icons.keyboard_arrow_down_rounded, color: Colors.white),
+          Icon(
+            expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+            color: Colors.white,
+          ),
         ]),
       ),
     );
   }
 }
-
 class _HeaderChip extends StatelessWidget {
   final IconData icon;
   final String value;
@@ -428,9 +441,7 @@ class _GlycemieModeToggle extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(m.icon,
-                      size: 13,
-                      color: selected ? Colors.white : accent.withOpacity(0.6)),
+
                   const SizedBox(width: 5),
                   Flexible(
                     child: Text(

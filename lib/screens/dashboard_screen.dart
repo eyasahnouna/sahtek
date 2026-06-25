@@ -3,10 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/day_record.dart';
+import '../widgets/logout_button.dart';
 import '../models/meal_entry.dart';
 import '../providers/app_provider.dart';
 import '../utils/app_theme.dart';
-import '../widgets/dose_badge.dart';
+
+// ── Indicateur glycémie (extrait de dose_badge pour éviter la dépendance) ─────
+class _GlyIndicator {
+  final Color color;
+  final String label;
+  final IconData icon;
+  const _GlyIndicator(this.color, this.label, this.icon);
+
+  static _GlyIndicator of(double v) {
+    if (v < 0.7)  return const _GlyIndicator(Color(0xFFE53935), 'Hypoglycémie', Icons.arrow_downward_rounded);
+    if (v <= 1.6) return const _GlyIndicator(Color(0xFF16A34A), 'Normale',       Icons.check_circle_rounded);
+    if (v <= 1.9) return const _GlyIndicator(Color(0xFFFF9A3C), 'Élevée',        Icons.warning_rounded);
+    return         const _GlyIndicator(Color(0xFFE53935), 'Hyperglycémie',  Icons.arrow_upward_rounded);
+  }
+}
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -37,6 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       return Scaffold(
         appBar: AppBar(
           title: const Text('Dashboard'),
+          actions: const [LogoutIconButton()],
           bottom: TabBar(
             controller: _tabs,
             indicatorColor: Colors.white,
@@ -297,7 +313,7 @@ class _DayChartCard extends StatelessWidget {
                     getTooltipItems: (spots) => spots.map((s) {
                       final i = s.x.round();
                       final entry = i < measured.length ? measured[i] : null;
-                      final ind = GlycemieIndicator.of(s.y);
+                      final ind = _GlyIndicator.of(s.y);
                       return LineTooltipItem(
                         '${s.y.toStringAsFixed(2)} Mg/dl\n${entry?.name ?? ''}',
                         AppFonts.bold(color: Colors.white, size: 11),
@@ -323,7 +339,7 @@ class _DayChartCard extends StatelessWidget {
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, _, __, ___) {
-                        final ind = GlycemieIndicator.of(spot.y);
+                        final ind = _GlyIndicator.of(spot.y);
                         return FlDotCirclePainter(
                           radius: 5,
                           color: ind.color,
@@ -441,7 +457,7 @@ class _TableRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glycConv  = entry.glycemieAffichee;
-    final indicator = glycConv != null ? GlycemieIndicator.of(glycConv) : null;
+    final indicator = glycConv != null ? _GlyIndicator.of(glycConv) : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 5),
@@ -519,7 +535,7 @@ class _TableFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avgGly  = record.averageGlycemieAffichee;
-    final ind     = avgGly > 0 ? GlycemieIndicator.of(avgGly) : null;
+    final ind     = avgGly > 0 ? _GlyIndicator.of(avgGly) : null;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -656,7 +672,7 @@ class _MonthSummary extends StatelessWidget {
     final avgGly    = glycRec.isEmpty ? 0.0
         : glycRec.fold(0.0, (s, r) => s + r.averageGlycemieAffichee) /
         glycRec.length;
-    final ind = avgGly > 0 ? GlycemieIndicator.of(avgGly) : null;
+    final ind = avgGly > 0 ? _GlyIndicator.of(avgGly) : null;
 
     return Row(children: [
       Expanded(child: _SummaryTile(
@@ -877,7 +893,7 @@ class _MonthChart extends StatelessWidget {
                   isStrokeCapRound: true,
                   dotData: FlDotData(show: glycSpots.length < 15,
                       getDotPainter: (spot, __, ___, ____) {
-                        final ind = GlycemieIndicator.of(spot.y);
+                        final ind = _GlyIndicator.of(spot.y);
                         return FlDotCirclePainter(radius: 4,
                             color: ind.color,
                             strokeColor: Colors.white,

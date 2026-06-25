@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "804761593351",
+    "project_id": "sahtek-7ae1a",
+    "storage_bucket": "sahtek-7ae1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804761593351:android:2cb690f46e34c3f67daca2",
+        "android_client_info": {
+          "package_name": "com.example.sahtek"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChCGaRKrRJBot0heb9sOUIGG1rKgfiPnY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

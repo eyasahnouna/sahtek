@@ -1,343 +1,452 @@
 import 'package:flutter/material.dart';
-import '../services/supabase_service.dart';
+import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
+import 'auth_screen.dart';
 import 'friend_view_screen.dart';
 
-class FriendsScreen extends StatefulWidget {
+/// Écran de gestion des collaborateurs (visiteurs lecture seule)
+class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
-  @override
-  State<FriendsScreen> createState() => _FriendsScreenState();
-}
-
-class _FriendsScreenState extends State<FriendsScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-  List<Map<String, dynamic>> _friendships = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabs = TabController(length: 2, vsync: this);
-    _load();
-  }
-
-  @override
-  void dispose() { _tabs.dispose(); super.dispose(); }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final data = await SupabaseService.instance.fetchFriendships();
-      setState(() { _friendships = data; _loading = false; });
-    } catch (_) {
-      setState(() => _loading = false);
-    }
-  }
-
-  String get _myId => SupabaseService.instance.userId ?? '';
-
-  List<Map<String, dynamic>> get _accepted =>
-      _friendships.where((f) => f['status'] == 'accepted').toList();
-
-  List<Map<String, dynamic>> get _pending =>
-      _friendships.where((f) =>
-          f['status'] == 'pending' && f['addressee_id'] == _myId).toList();
-
-  Map<String, dynamic> _friendProfile(Map<String, dynamic> f) =>
-      f['requester_id'] == _myId ? f['addressee'] : f['requester'];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mes amis'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _load,
+    // Non connecté → proposer la connexion
+    if (!FirebaseService.instance.isLoggedIn) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Partage de données')),
+        body: Center(child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, children: [
+          Container(padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle),
+              child: const Icon(Icons.lock_rounded,
+                  size: 48, color: AppTheme.primary)),
+          const SizedBox(height: 20),
+          Text('Connexion requise', style: AppFonts.title(size: 18)),
+          const SizedBox(height: 8),
+          Text('Connectez-vous pour inviter\ndes visiteurs à voir vos données.',
+              style: AppFonts.body(color: Colors.grey, size: 14),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 28),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const AuthScreen())),
+            icon: const Icon(Icons.login_rounded),
+            label: const Text('Se connecter / S\'inscrire'),
           ),
+        ])),
+      );
+    }
+
+    return DefaultTabController(length: 2, child: Scaffold(
+      appBar: AppBar(
+        title: const Text('Partage de données'),
+        actions: [
+          // Bouton déconnexion
           IconButton(
-            icon: const Icon(Icons.person_add_rounded),
+            icon: const Icon(Icons.logout_rounded, size: 20),
+            tooltip: 'Se déconnecter',
+            onPressed: () async => FirebaseService.instance.signOut(),
+          ),
+        ],
+        bottom: const TabBar(
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white54,
+          tabs: [
+            Tab(icon: Icon(Icons.people_rounded, size: 16),
+                text: 'Mes visiteurs'),
+            Tab(icon: Icon(Icons.mail_rounded, size: 16),
+                text: 'Invitations reçues'),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showInviteDialog(context),
+        backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+        label: Text('Inviter un visiteur',
+            style: AppFonts.label(color: Colors.white, size: 13)
+                .copyWith(fontWeight: FontWeight.w600)),
+      ),
+      body: const TabBarView(children: [
+        _MyVisitorsTab(),
+        _InvitationsReceivedTab(),
+      ]),
+    ));
+  }
+
+  Future<void> _showInviteDialog(BuildContext context) async {
+    final emailCtrl = TextEditingController();
+    String? error;
+
+    await showDialog(context: context, builder: (_) => StatefulBuilder(
+      builder: (ctx, set) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
+        title: Row(children: [
+          Container(padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle),
+              child: const Icon(Icons.person_add_rounded,
+                  color: AppTheme.primary, size: 20)),
+          const SizedBox(width: 10),
+          Expanded(child: Text('Inviter un visiteur',
+              style: AppFonts.title(size: 15))),
+        ]),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Info accès
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppTheme.primary.withOpacity(0.2))),
+            child: Column(children: [
+              Row(children: [
+                const Icon(Icons.visibility_rounded,
+                    color: AppTheme.primary, size: 16),
+                const SizedBox(width: 8),
+                Text('Accès visiteur (lecture seule)',
+                    style: AppFonts.label(
+                        color: AppTheme.primary, size: 12)
+                        .copyWith(fontWeight: FontWeight.w700)),
+              ]),
+              const SizedBox(height: 6),
+              Text(
+                'Le visiteur peut consulter vos mesures et doses. '
+                    'Il ne peut pas modifier vos données.',
+                style: AppFonts.label(
+                    color: AppTheme.primary.withOpacity(0.8), size: 11),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: emailCtrl,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+                labelText: 'Email du visiteur',
+                hintText: 'medecin@exemple.com',
+                prefixIcon: const Icon(Icons.email_rounded, size: 18),
+                errorText: error),
+          ),
+          const SizedBox(height: 10),
+          // Note
+          Row(children: [
+            const Icon(Icons.info_outline_rounded,
+                size: 14, color: Colors.grey),
+            const SizedBox(width: 6),
+            Expanded(child: Text(
+              'La personne doit avoir un compte Sahtek avec cet email.',
+              style: AppFonts.label(color: Colors.grey, size: 11),
+            )),
+          ]),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx),
+              child: Text('Annuler',
+                  style: AppFonts.body(color: Colors.grey))),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.send_rounded, size: 15),
+            label: const Text('Inviter'),
             onPressed: () async {
-              await _showAddFriendDialog();
-              _load();
+              set(() => error = null);
+              try {
+                await FirebaseService.instance.inviteCollaborator(
+                  email: emailCtrl.text,
+                  role: 'viewer',  // ← toujours visiteur, pas éditeur
+                );
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                        'Invitation envoyée à ${emailCtrl.text.trim()}'),
+                    backgroundColor: AppTheme.success,
+                  ));
+                }
+              } catch (e) {
+                set(() => error = e.toString()
+                    .replaceAll('Exception: ', ''));
+              }
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabs,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
-          tabs: [
-            Tab(text: 'Amis (${_accepted.length})'),
-            Tab(text: 'Demandes (${_pending.length})'),
-          ],
-        ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabs,
-              children: [
-                _FriendsList(
-                  friends: _accepted,
-                  myId: _myId,
-                  getFriendProfile: _friendProfile,
-                  onRemove: (f) async {
-                    await SupabaseService.instance.removeFriend(f['id']);
-                    _load();
-                  },
-                  onView: (f) {
-                    final profile = _friendProfile(f);
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => FriendViewScreen(
-                        friendId:   profile['id'],
-                        friendName: profile['full_name'] ?? profile['username'],
-                      ),
-                    ));
-                  },
-                ),
-                _PendingList(
-                  pending: _pending,
-                  getFriendProfile: _friendProfile,
-                  onAccept: (f) async {
-                    await SupabaseService.instance.acceptFriendRequest(f['id']);
-                    _load();
-                  },
-                  onReject: (f) async {
-                    await SupabaseService.instance.rejectFriendRequest(f['id']);
-                    _load();
-                  },
-                ),
-              ],
-            ),
-    );
-  }
-
-  Future<void> _showAddFriendDialog() async {
-    final ctrl = TextEditingController();
-    List<Map<String, dynamic>> results = [];
-    bool searching = false;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlgState) => AlertDialog(
-          title: const Text('Ajouter un ami',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextField(
-                controller: ctrl,
-                decoration: InputDecoration(
-                  hintText: 'Rechercher par nom d\'utilisateur…',
-                  prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                  suffixIcon: searching
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(width: 16, height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2)))
-                      : null,
-                ),
-                onChanged: (v) async {
-                  if (v.length < 2) { setDlgState(() => results = []); return; }
-                  setDlgState(() => searching = true);
-                  final r = await SupabaseService.instance.searchProfiles(v);
-                  setDlgState(() { results = r; searching = false; });
-                },
-              ),
-              const SizedBox(height: 12),
-              if (results.isNotEmpty)
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: results.length,
-                  itemBuilder: (_, i) {
-                    final p = results[i];
-                    return ListTile(
-                      leading: _Avatar(name: p['username'] ?? '?'),
-                      title: Text(p['full_name'] ?? p['username'],
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                      subtitle: Text('@${p['username']}',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
-                      trailing: TextButton(
-                        onPressed: () async {
-                          await SupabaseService.instance.sendFriendRequest(p['id']);
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Demande envoyée !')));
-                        },
-                        child: const Text('Inviter'),
-                      ),
-                    );
-                  },
-                ),
-            ]),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer')),
-          ],
-        ),
-      ),
-    );
+    ));
   }
 }
 
-// ── Friends list ──────────────────────────────────────────────────────────────
-class _FriendsList extends StatelessWidget {
-  final List<Map<String, dynamic>> friends;
-  final String myId;
-  final Map<String, dynamic> Function(Map<String, dynamic>) getFriendProfile;
-  final ValueChanged<Map<String, dynamic>> onRemove;
-  final ValueChanged<Map<String, dynamic>> onView;
-
-  const _FriendsList({
-    required this.friends,
-    required this.myId,
-    required this.getFriendProfile,
-    required this.onRemove,
-    required this.onView,
-  });
+// ── Onglet : Mes visiteurs ────────────────────────────────────────────────────
+class _MyVisitorsTab extends StatelessWidget {
+  const _MyVisitorsTab();
 
   @override
   Widget build(BuildContext context) {
-    if (friends.isEmpty) {
-      return const _EmptyState(
-        icon: Icons.people_outline_rounded,
-        message: 'Aucun ami pour l\'instant',
-        sub: 'Ajoutez des amis avec le bouton +',
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: friends.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, i) {
-        final f = friends[i];
-        final p = getFriendProfile(f);
-        return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            leading: _Avatar(name: p['username'] ?? '?'),
-            title: Text(p['full_name'] ?? p['username'],
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('@${p['username']}',
-                style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(
-                icon: const Icon(Icons.bar_chart_rounded, color: AppTheme.primary),
-                tooltip: 'Voir les données',
-                onPressed: () => onView(f),
-              ),
-              IconButton(
-                icon: Icon(Icons.person_remove_outlined,
-                    color: Colors.grey.shade400),
-                tooltip: 'Retirer',
-                onPressed: () => onRemove(f),
-              ),
-            ]),
-          ),
+    return StreamBuilder<List<FirebaseCollaborator>>(
+      stream: FirebaseService.instance.streamMyCollaborators(),
+      builder: (_, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final list = snap.data ?? [];
+        if (list.isEmpty) {
+          return _EmptyState(
+            icon: Icons.people_outline_rounded,
+            title: 'Aucun visiteur',
+            sub: 'Appuyez sur "Inviter" pour partager\nvos données en lecture seule.',
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          itemCount: list.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (_, i) => _VisitorCard(c: list[i]),
         );
       },
     );
   }
 }
 
-// ── Pending list ───────────────────────────────────────────────────────────────
-class _PendingList extends StatelessWidget {
-  final List<Map<String, dynamic>> pending;
-  final Map<String, dynamic> Function(Map<String, dynamic>) getFriendProfile;
-  final ValueChanged<Map<String, dynamic>> onAccept;
-  final ValueChanged<Map<String, dynamic>> onReject;
+class _VisitorCard extends StatelessWidget {
+  final FirebaseCollaborator c;
+  const _VisitorCard({required this.c});
 
-  const _PendingList({
-    required this.pending,
-    required this.getFriendProfile,
-    required this.onAccept,
-    required this.onReject,
-  });
+  Color get _statusColor => c.status == 'accepted' ? AppTheme.success
+      : c.status == 'rejected' ? AppTheme.danger : AppTheme.warning;
+  IconData get _statusIcon => c.status == 'accepted'
+      ? Icons.check_circle_rounded
+      : c.status == 'rejected'
+      ? Icons.cancel_rounded : Icons.schedule_rounded;
 
   @override
   Widget build(BuildContext context) {
-    if (pending.isEmpty) {
-      return const _EmptyState(
-        icon: Icons.mark_email_unread_outlined,
-        message: 'Aucune demande en attente',
-        sub: 'Les invitations de vos amis apparaîtront ici',
-      );
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: pending.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, i) {
-        final f = pending[i];
-        final p = getFriendProfile(f);
-        return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            leading: _Avatar(name: p['username'] ?? '?'),
-            title: Text(p['full_name'] ?? p['username'],
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text('@${p['username']}',
-                style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(
-                icon: const Icon(Icons.check_circle_rounded, color: AppTheme.success),
-                tooltip: 'Accepter',
-                onPressed: () => onAccept(f),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(18),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05),
+              blurRadius: 10, offset: const Offset(0, 3))]),
+      child: Row(children: [
+        // Avatar
+        Container(width: 46, height: 46,
+            decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                shape: BoxShape.circle),
+            child: Center(child: Text(
+                c.email.isNotEmpty
+                    ? c.email.substring(0, 1).toUpperCase() : '?',
+                style: AppFonts.bold(
+                    color: AppTheme.primary, size: 18)))),
+        const SizedBox(width: 12),
+        Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(c.email, style: AppFonts.title(size: 13),
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Row(children: [
+            // Badge visiteur
+            Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.visibility_rounded,
+                      size: 10, color: AppTheme.primary),
+                  const SizedBox(width: 3),
+                  Text('Visiteur',
+                      style: AppFonts.label(
+                          color: AppTheme.primary, size: 10)
+                          .copyWith(fontWeight: FontWeight.w700)),
+                ])),
+            const SizedBox(width: 6),
+            // Statut
+            Icon(_statusIcon, color: _statusColor, size: 14),
+            const SizedBox(width: 3),
+            Text(c.statusLabel,
+                style: AppFonts.label(
+                    color: _statusColor, size: 11)),
+          ]),
+        ])),
+        // Bouton supprimer
+        IconButton(
+          icon: const Icon(Icons.delete_outline_rounded, size: 20),
+          color: Colors.red.shade300,
+          tooltip: 'Retirer l\'accès',
+          onPressed: () async {
+            final ok = await showDialog<bool>(context: context,
+              builder: (_) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                title: Text('Retirer l\'accès ?',
+                    style: AppFonts.title(size: 15)),
+                content: Text(
+                    '${c.email} ne pourra plus voir vos données.',
+                    style: AppFonts.body(size: 13)),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Annuler')),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.danger),
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Retirer'),
+                  ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.cancel_rounded, color: AppTheme.danger),
-                tooltip: 'Refuser',
-                onPressed: () => onReject(f),
-              ),
-            ]),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ── Shared widgets ────────────────────────────────────────────────────────────
-class _Avatar extends StatelessWidget {
-  final String name;
-  const _Avatar({required this.name});
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      backgroundColor: AppTheme.primary.withOpacity(0.15),
-      child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: const TextStyle(
-            color: AppTheme.primary, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final String sub;
-  const _EmptyState({required this.icon, required this.message, required this.sub});
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, size: 80, color: Colors.grey.shade300),
-        const SizedBox(height: 16),
-        Text(message, style: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w600,
-            color: Colors.grey.shade500)),
-        const SizedBox(height: 6),
-        Text(sub, textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+            );
+            if (ok == true) {
+              await FirebaseService.instance.removeCollaborator(c.id);
+            }
+          },
+        ),
       ]),
     );
   }
+}
+
+// ── Onglet : Invitations reçues ───────────────────────────────────────────────
+class _InvitationsReceivedTab extends StatelessWidget {
+  const _InvitationsReceivedTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<FirebaseCollaborator>>(
+      stream: FirebaseService.instance.streamMyInvitations(),
+      builder: (_, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final list = snap.data ?? [];
+        if (list.isEmpty) {
+          return _EmptyState(
+            icon: Icons.mail_outline_rounded,
+            title: 'Aucune invitation',
+            sub: 'Quand quelqu\'un vous invite,\nvous le verrez ici.',
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: list.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (_, i) => _InvitationCard(inv: list[i]),
+        );
+      },
+    );
+  }
+}
+
+class _InvitationCard extends StatelessWidget {
+  final FirebaseCollaborator inv;
+  const _InvitationCard({required this.inv});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.warning.withOpacity(0.4)),
+          boxShadow: [BoxShadow(
+              color: AppTheme.warning.withOpacity(0.08),
+              blurRadius: 10)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                  color: AppTheme.warning.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10)),
+              child: const Icon(Icons.mail_rounded,
+                  color: AppTheme.warning, size: 18)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Invitation reçue',
+                style: AppFonts.label(color: AppTheme.warning, size: 11)
+                    .copyWith(fontWeight: FontWeight.w700)),
+            Text(inv.ownerEmail,
+                style: AppFonts.title(size: 13),
+                overflow: TextOverflow.ellipsis),
+          ])),
+        ]),
+        const SizedBox(height: 8),
+        Text('vous invite à consulter ses données médicales en lecture seule.',
+            style: AppFonts.body(size: 13)),
+        const SizedBox(height: 6),
+        // Badge visiteur
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.visibility_rounded,
+                size: 12, color: AppTheme.primary),
+            const SizedBox(width: 5),
+            Text('Accès visiteur — lecture seule uniquement',
+                style: AppFonts.label(
+                    color: AppTheme.primary, size: 11)
+                    .copyWith(fontWeight: FontWeight.w600)),
+          ]),
+        ),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: () async {
+              await FirebaseService.instance.rejectInvitation(inv.id);
+            },
+            icon: const Icon(Icons.close_rounded, size: 15),
+            label: const Text('Refuser'),
+            style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.danger),
+                foregroundColor: AppTheme.danger),
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: ElevatedButton.icon(
+            onPressed: () async {
+              await FirebaseService.instance.acceptInvitation(inv.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Invitation acceptée !'),
+                    backgroundColor: AppTheme.success,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.check_rounded, size: 15),
+            label: const Text('Accepter'),
+          )),
+        ]),
+      ]),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title, sub;
+  const _EmptyState({required this.icon, required this.title,
+    required this.sub});
+  @override
+  Widget build(BuildContext context) => Center(child: Padding(
+    padding: const EdgeInsets.all(32),
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Icon(icon, size: 70, color: Colors.grey.shade300),
+      const SizedBox(height: 16),
+      Text(title, style: AppFonts.title(
+          color: Colors.grey.shade400, size: 16)),
+      const SizedBox(height: 8),
+      Text(sub, style: AppFonts.body(
+          color: Colors.grey.shade400, size: 13),
+          textAlign: TextAlign.center),
+    ]),
+  ));
 }

@@ -18,6 +18,26 @@ class AppTheme {
   static const Color dinnerColor     = Color(0xFF7C3AED);
   static const Color snackColor      = Color(0xFF16A34A);
 
+  // ── Helpers glycémie ───────────────────────────────────────────
+  /// Retourne la couleur indicateur selon la valeur Mg/dl
+  static Color glucoseColor(double value) {
+    if (value < 0.7)  return const Color(0xFFE53935); // rouge — hypo
+    if (value <= 1.6) return const Color(0xFF16A34A); // vert  — normal
+    if (value <= 1.9) return const Color(0xFFFF9A3C); // orange — élevé
+    return const Color(0xFFE53935);                   // rouge  — hyper
+  }
+
+  /// Alias court utilisé dans add_reading_sheet
+  static String glucose(double value) => glucoseLabel(value);
+
+  /// Retourne le label textuel selon la valeur Mg/dl
+  static String glucoseLabel(double value) {
+    if (value < 0.7)  return 'Hypoglycémie';
+    if (value <= 1.6) return 'Normale';
+    if (value <= 1.9) return 'Légèrement élevée';
+    return 'Hyperglycémie';
+  }
+
   // ── Système typographique Poppins ─────────────────────────────
   //
   //  displayLarge   → 28 SemiBold  — grands titres (logo, onboarding)
@@ -263,4 +283,29 @@ class AppFonts {
   static TextStyle unit({Color? color}) =>
       GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600,
           color: color ?? AppTheme.primary, letterSpacing: 0.5);
+}
+
+// ── Extensions pour les nouveaux écrans ───────────────────────────────────────
+
+extension AppThemeGlucose on AppTheme {
+  static const double hypoThreshold = 0.7;
+  static const double normalMax     = 1.6;
+  static const double elevMax       = 1.9;
+}
+
+extension AppThemeHelpers on AppTheme {}
+
+// Helpers statiques globaux pour les nouveaux screens
+Color glucoseColorOf(double value) {
+  if (value < 0.7) return const Color(0xFFE53935);
+  if (value <= 1.6) return const Color(0xFF16A34A);
+  if (value <= 1.9) return const Color(0xFFFF9A3C);
+  return const Color(0xFFE53935);
+}
+
+String glucoseLabelOf(double value) {
+  if (value < 0.7) return 'Hypoglycémie';
+  if (value <= 1.6) return 'Normale';
+  if (value <= 1.9) return 'Légèrement élevée';
+  return 'Hyperglycémie';
 }
