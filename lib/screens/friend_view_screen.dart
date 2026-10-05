@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../models/day_record.dart';
 import '../models/meal_entry.dart';
+import '../screens/pdf_viewer_screen.dart';
 import '../services/firebase_service.dart';
 import '../services/report_service.dart';
 import '../utils/app_theme.dart';
@@ -76,12 +77,20 @@ class FriendViewScreen extends StatelessWidget {
           final records = snap.data ?? [];
           if (records.isEmpty) return const SizedBox.shrink();
           return FloatingActionButton.extended(
-            onPressed: () => ReportService.instance.generateAndPrintReport(
-              patientName: friendName,
-              records: records,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PdfViewerScreen(
+                  patientName: friendName,
+                  pdfBytes: ReportService.instance.buildPdfBytes(
+                    patientName: friendName,
+                    records: records,
+                  ),
+                ),
+              ),
             ),
             icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
-            label: const Text('Exporter PDF', style: TextStyle(color: Colors.white)),
+            label: const Text('Voir le rapport', style: TextStyle(color: Colors.white)),
             backgroundColor: AppTheme.primary,
           );
         },

@@ -6,6 +6,9 @@ import '../models/day_record.dart';
 import '../widgets/logout_button.dart';
 import '../models/meal_entry.dart';
 import '../providers/app_provider.dart';
+import '../screens/pdf_viewer_screen.dart';
+import '../services/firebase_service.dart';
+import '../services/report_service.dart';
 import '../utils/app_theme.dart';
 
 // ── Indicateur glycémie (extrait de dose_badge pour éviter la dépendance) ─────
@@ -70,6 +73,16 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
         ),
+        floatingActionButton: records.isEmpty
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: () => _openMyReport(context, records),
+                backgroundColor: AppTheme.primary,
+                icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
+                label: Text('Mon rapport',
+                    style: AppFonts.label(color: Colors.white, size: 13)
+                        .copyWith(fontWeight: FontWeight.w600)),
+              ),
         body: records.isEmpty
             ? const _EmptyState()
             : TabBarView(
@@ -81,6 +94,22 @@ class _DashboardScreenState extends State<DashboardScreen>
         ),
       );
     });
+  }
+
+  Future<void> _openMyReport(BuildContext context, List<DayRecord> records) async {
+    final uid  = FirebaseService.instance.currentUid ?? '';
+    final name = uid.isNotEmpty
+        ? await FirebaseService.instance.getUserName(uid)
+        : (FirebaseService.instance.currentEmail?.split('@').first ?? 'Patient');
+
+    if (!context.mounted) return;
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => PdfViewerScreen(
+        patientName: name,
+        pdfBytes: ReportService.instance.buildPdfBytes(
+            patientName: name, records: records),
+      ),
+    ));
   }
 }
 

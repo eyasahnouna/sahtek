@@ -217,9 +217,20 @@ class AppProvider extends ChangeNotifier {
 
     entries[idx] = updated;
 
-    // Notification locale si besoin
-    if (_notificationsEnabled && updated.doseTime != null) {
-      NotificationService.instance.scheduleReminder(updated);
+    if (_notificationsEnabled) {
+      // Rappel de dose insuline (pas pour une mesure spontanée ponctuelle)
+      if (updated.doseTime != null && updated.slotId != spontaneousSlot) {
+        NotificationService.instance.scheduleReminder(updated);
+      }
+      // Notification "Mesure glycémie 2h après repas" pour les repas principaux
+      const _mainSlots = {'bkf_mesure', 'lunch_mesure', 'diner_mesure'};
+      if (_mainSlots.contains(updated.slotId) && updated.mealTime != null) {
+        NotificationService.instance.schedulePostMealMeasure(
+          slotId:   updated.slotId!,
+          mealTime: updated.mealTime!,
+          mealName: updated.name,
+        );
+      }
     }
 
     notifyListeners();
@@ -246,14 +257,15 @@ class AppProvider extends ChangeNotifier {
     _saveToFirestore(record);
   }
 
-  /// Met à jour les glucides estimés (depuis l'analyse photo) pour une entrée
-  void updateCarbsG(String id, double carbsG, String? imageUrl) {
+  /// Met à jour uniquement l'imageUrl d'une entrée (photo de repas sans analyse IA)
+  void updateImageUrl(String id, String? imageUrl) {
     _ensureRecord();
     final entries = _records[_currentKey]!.entries;
     final idx     = entries.indexWhere((e) => e.id == id);
     if (idx == -1) return;
 
-    entries[idx] = entries[idx].copyWith(carbsG: carbsG, imageUrl: imageUrl);
+    entries[idx] = entries[idx].copyWith(
+        imageUrl: imageUrl, clearImageUrl: imageUrl == null);
 
     notifyListeners();
     _persistLocal();
@@ -274,12 +286,23 @@ class AppProvider extends ChangeNotifier {
     _saveToFirestore(_records[_currentKey]!);
   }
 
-  /// Ajouter une mesure libre (hors slots fixes)
-  void addSensorMeasure({required String name, required TimeOfDay time}) {
+  /// slotId des mesures spontanées (hors créneaux fixes)
+  static const spontaneousSlot = 'spontane';
+
+  /// Ajouter une mesure spontanée (hors slots fixes)
+  void addSensorMeasure({
+    required String name,
+    required TimeOfDay time,
+    double? glycemie,
+    GlycemieMode glycemieMode = GlycemieMode.directe,
+  }) {
     _ensureRecord();
     final entry = MealEntry(
-      name:     name.trim().isEmpty ? 'Mesure capteur' : name.trim(),
+      name:     name.trim().isEmpty ? 'Mesure spontanée' : name.trim(),
       type:     MealType.mesure,
+      slotId:   spontaneousSlot,
+      glycemie: glycemie,
+      glycemieMode: glycemieMode,
       mealTime: time,
       doseTime: time,
     );

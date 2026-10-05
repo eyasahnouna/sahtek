@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:sahtek/providers/glucose_provider.dart';
 import '../models/glucose_reading.dart';
 import '../models/insulin_dose.dart';
-import '../providers/alert_provider.dart';
 import '../providers/insulin_provider.dart';
+import '../services/notification_service.dart';
 import '../services/ocr_service.dart';
 import '../utils/app_theme.dart';
 
@@ -147,24 +147,41 @@ class _AddReadingSheetState extends State<AddReadingSheet>
     setState(() => _saving = true);
     try {
       if (_tabs.index == 0) {
+        // ── Glycémie ────────────────────────────────────────────────────────
         final v = _rawValue;
         if (v == null || v <= 0) return;
+        final now = DateTime.now();
         await context.read<GlucoseProvider>().addReading(
           GlucoseReading(
             value: v, isConverted: _isConverted,
-            timestamp: DateTime.now(),
+            timestamp: now,
             note: _glucNoteCtrl.text.isEmpty ? null : _glucNoteCtrl.text,
             mealContext: _mealContext,
           ),
-          rules: context.read<AlertProvider>().rules,
         );
+        // Valeur en g/L pour comparer aux seuils
+        final display = _displayValue ?? v;
+        if (display < 0.7) {
+          // Hypoglycémie → refaire la mesure dans 15 min
+          await NotificationService.instance.scheduleHypoglycemiaRecheck();
+        } else if (display > 1.9) {
+          // Hyperglycémie → rappels hydratation toutes les 30 min (×3)
+          await NotificationService.instance.scheduleHyperglycemiaWaterReminders();
+        } else {
+          // Glycémie normale → annuler les rappels eau en cours
+          await NotificationService.instance.cancelHyperglycemiaReminders();
+        }
       } else {
+        // ── Insuline ────────────────────────────────────────────────────────
         final u = double.tryParse(_unitsCtrl.text.replaceAll(',', '.'));
         if (u == null || u <= 0) return;
+        final now = DateTime.now();
         await context.read<InsulinProvider>().addDose(InsulinDose(
-          units: u, insulinType: _insulinType, timestamp: DateTime.now(),
+          units: u, insulinType: _insulinType, timestamp: now,
           note: _insuNoteCtrl.text.isEmpty ? null : _insuNoteCtrl.text,
         ));
+        // Dose enregistrée → mesurer la glycémie dans 2h
+        await NotificationService.instance.schedulePostInsulinMeasure(now);
       }
       if (mounted) Navigator.pop(context);
     } finally {

@@ -60,10 +60,10 @@ class CollaboratorsScreen extends StatelessWidget {
       ));
     }
 
-    // Mode patient : 3 onglets + FAB inviter
-    return DefaultTabController(length: 3, child: Scaffold(
+    // Mode patient : 2 onglets + FAB inviter son médecin
+    return DefaultTabController(length: 2, child: Scaffold(
       appBar: AppBar(
-        title: const Text('Accès partagé'),
+        title: const Text('Mon médecin'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
@@ -76,8 +76,7 @@ class CollaboratorsScreen extends StatelessWidget {
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white54,
           tabs: [
-            Tab(icon: Icon(Icons.medical_services_rounded, size: 16), text: 'Mes patients'),
-            Tab(icon: Icon(Icons.people_rounded, size: 16), text: 'Mes accès'),
+            Tab(icon: Icon(Icons.medical_services_rounded, size: 16), text: 'Mes médecins'),
             Tab(icon: Icon(Icons.mail_rounded, size: 16), text: 'Invitations'),
           ],
         ),
@@ -86,11 +85,10 @@ class CollaboratorsScreen extends StatelessWidget {
         onPressed: () => _showInviteDialog(context),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-        label: Text('Inviter', style: AppFonts.label(color: Colors.white, size: 13)
+        label: Text('Inviter mon médecin', style: AppFonts.label(color: Colors.white, size: 13)
             .copyWith(fontWeight: FontWeight.w600)),
       ),
       body: const TabBarView(children: [
-        _MyPatientsTab(),
         _MyCollaboratorsTab(),
         _InvitationsTab(),
       ]),
@@ -123,7 +121,7 @@ class CollaboratorsScreen extends StatelessWidget {
 
   Future<void> _showInviteDialog(BuildContext context) async {
     final emailCtrl = TextEditingController();
-    String role = 'viewer';
+    const role = 'doctor';
     String? error;
     bool sending = false;
 
@@ -138,7 +136,7 @@ class CollaboratorsScreen extends StatelessWidget {
               child: const Icon(Icons.person_add_rounded,
                   color: AppTheme.primary, size: 20)),
           const SizedBox(width: 10),
-          Text('Inviter un collaborateur', style: AppFonts.title(size: 15)),
+          Expanded(child: Text('Inviter mon médecin', style: AppFonts.title(size: 15))),
         ]),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
@@ -152,7 +150,7 @@ class CollaboratorsScreen extends StatelessWidget {
                   color: AppTheme.primary, size: 16),
               const SizedBox(width: 8),
               Expanded(child: Text(
-                'La personne devra ouvrir Sahtek avec ce compte email pour accepter l\'invitation.',
+                'Votre médecin devra ouvrir Sahtek avec ce compte email pour accepter l\'invitation.',
                 style: AppFonts.label(color: AppTheme.primary, size: 12),
               )),
             ]),
@@ -166,7 +164,7 @@ class CollaboratorsScreen extends StatelessWidget {
               if (error != null) set(() => error = null);
             },
             decoration: InputDecoration(
-                labelText: 'Email du collaborateur',
+                labelText: 'Email du médecin',
                 hintText: 'exemple@mail.com',
                 prefixIcon: const Icon(Icons.email_rounded, size: 18),
                 errorText: error,
@@ -176,49 +174,6 @@ class CollaboratorsScreen extends StatelessWidget {
                         onPressed: () { emailCtrl.clear(); set(() => error = null); })
                     : null),
           ),
-          const SizedBox(height: 12),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Rôle :', style: AppFonts.label(color: Colors.grey.shade600, size: 11)),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                  color: AppTheme.bgColor,
-                  borderRadius: BorderRadius.circular(12)),
-              child: Row(children: ['viewer', 'doctor'].map((r) {
-                final sel = role == r;
-                return Expanded(child: GestureDetector(
-                  onTap: () => set(() => role = r),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                    decoration: BoxDecoration(
-                        color: sel ? AppTheme.primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(9)),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                      Icon(r == 'doctor'
-                          ? Icons.medical_services_rounded : Icons.person_rounded,
-                          size: 14,
-                          color: sel ? Colors.white : Colors.grey),
-                      const SizedBox(width: 5),
-                      Column(children: [
-                        Text(r == 'viewer' ? 'Proche' : 'Médecin',
-                            style: AppFonts.label(
-                                color: sel ? Colors.white : Colors.grey, size: 12)
-                                .copyWith(fontWeight: sel
-                                    ? FontWeight.w700 : FontWeight.normal)),
-                        Text(r == 'viewer' ? 'Lecture seule' : 'Accès complet',
-                            style: AppFonts.label(
-                                color: sel ? Colors.white70 : Colors.grey.shade400,
-                                size: 9)),
-                      ]),
-                    ]),
-                  ),
-                ));
-              }).toList()),
-            ),
-          ]),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
@@ -394,10 +349,10 @@ class _MyCollaboratorsTab extends StatelessWidget {
             Icon(Icons.people_outline_rounded, size: 70,
                 color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            Text('Aucun collaborateur', style: AppFonts.title(
+            Text('Aucun médecin', style: AppFonts.title(
                 color: Colors.grey.shade400, size: 16)),
             const SizedBox(height: 8),
-            Text('Appuyez sur "Inviter" pour\npartager vos données.',
+            Text('Appuyez sur "Inviter mon médecin" pour\npartager vos données.',
                 style: AppFonts.body(color: Colors.grey.shade400, size: 13),
                 textAlign: TextAlign.center),
           ]));
@@ -457,8 +412,9 @@ class _CollaboratorCard extends StatelessWidget {
             const SizedBox(width: 6),
             Icon(_sIcon, color: _sColor, size: 14),
             const SizedBox(width: 3),
-            Text(c.statusLabel,
-                style: AppFonts.label(color: _sColor, size: 11)),
+            Flexible(child: Text(c.statusLabel,
+                style: AppFonts.label(color: _sColor, size: 11),
+                overflow: TextOverflow.ellipsis)),
           ]),
         ])),
         IconButton(
@@ -469,7 +425,7 @@ class _CollaboratorCard extends StatelessWidget {
               builder: (_) => AlertDialog(
                 title: Text('Retirer l\'accès ?',
                     style: AppFonts.title(size: 15)),
-                content: Text('${c.email} ne pourra plus voir vos données.',
+                content: Text('${c.email} ne pourra plus accéder à vos données.',
                     style: AppFonts.body(size: 13)),
                 actions: [
                   TextButton(onPressed: () => Navigator.pop(context, false),
@@ -568,7 +524,7 @@ class _InvitationCard extends StatelessWidget {
         ]),
         const SizedBox(height: 8),
         Text(
-          '${inv.ownerEmail} vous invite à consulter ses données médicales.',
+          'Le patient ${inv.ownerEmail} vous invite à consulter ses données médicales.',
           style: AppFonts.body(size: 13),
         ),
         const SizedBox(height: 4),

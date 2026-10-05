@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
+import '../widgets/sahtek_logo.dart';
 
 const _insulins = [
   'Novorapid (Asparte)',
@@ -114,12 +115,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
             child: Column(children: [
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Container(width: 40, height: 40,
-                  decoration: BoxDecoration(
-                      color: AppTheme.primary, shape: BoxShape.circle),
-                  child: const Icon(Icons.favorite_rounded,
-                      color: Colors.white, size: 20)),
-                const SizedBox(width: 10),
+                const SahtekLogo(size: 40, animate: false),
+                const SizedBox(width: 12),
                 Text('Configuration du profil',
                     style: AppFonts.bold(color: AppTheme.primary, size: 18)),
               ]),

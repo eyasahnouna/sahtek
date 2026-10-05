@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../models/day_record.dart';
 import 'email_service.dart';
+import 'image_storage_service.dart';
 
 /// Service Firebase — Auth + Firestore
 class FirebaseService {
@@ -30,12 +30,13 @@ class FirebaseService {
   }) async {
     final cred = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
-    // Créer le profil
+    // Créer le profil — les médecins/proches n'ont pas de profil patient à remplir
     await _db.collection('users').doc(cred.user!.uid).set({
-      'email':      email,
-      'fullName':   fullName ?? '',
-      'userType':   userType,
-      'createdAt':  FieldValue.serverTimestamp(),
+      'email':           email,
+      'fullName':        fullName ?? '',
+      'userType':        userType,
+      'profileComplete': userType == 'doctor', // doctor → skip ProfileSetupScreen
+      'createdAt':       FieldValue.serverTimestamp(),
     });
     if (fullName != null) {
       await cred.user!.updateDisplayName(fullName);
@@ -66,22 +67,12 @@ class FirebaseService {
     await _myRecords.doc(record.dateKey).set(record.toJson());
   }
 
-  // ── Storage ────────────────────────────────────────────────────────────────
-  
-  /// Upload une image de repas vers Firebase Storage et retourne l'URL
+  // ── Storage (Cloudinary) ───────────────────────────────────────────────────
+
   Future<String?> uploadMealImage(File imageFile) async {
     if (currentUid == null) return null;
-    try {
-      final ext = imageFile.path.split('.').last;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-      final path = 'meals/$currentUid/$fileName';
-      final ref = FirebaseStorage.instance.ref().child(path);
-      await ref.putFile(imageFile);
-      return await ref.getDownloadURL();
-    } catch (e) {
-      debugPrint("Erreur upload image: $e");
-      return null;
-    }
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    return ImageStorageService.instance.uploadFile(imageFile, 'meals/$currentUid/$id');
   }
 
   /// Charger tous les records de l'utilisateur

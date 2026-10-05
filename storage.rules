@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Photos de repas : seul le propriétaire peut écrire,
+    // tout utilisateur authentifié peut lire (nécessaire pour le PDF médecin)
+    match /meals/{uid}/{allPaths=**} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+  }
+}

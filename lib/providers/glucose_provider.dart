@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/glucose_reading.dart';
-import '../models/alert_rule.dart';
 import '../services/firebase_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,29 +59,20 @@ class GlucoseProvider extends ChangeNotifier {
   }
 
   // ── Ajouter une mesure ──────────────────────────────────────────────────────
-  Future<void> addReading(
-      GlucoseReading reading, {
-        List<AlertRule> rules = const [],
-      }) async {
+  Future<void> addReading(GlucoseReading reading) async {
     _readings.add(reading);
     _readings.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     notifyListeners();
     await _persistLocal();
 
-    // Auto-save Firestore (crée doc + collection si absent)
     if (_col != null) {
       try {
         await _col!.doc(reading.id).set(
           reading.toJson(),
-          SetOptions(merge: true),   // create OU update automatique
+          SetOptions(merge: true),
         );
-      } catch (_) {
-        // hors ligne → Firestore garde en attente et sync à la reconnexion
-      }
+      } catch (_) {}
     }
-
-    // Vérifier les alertes
-    _checkAlerts(reading, rules);
   }
 
   // ── Supprimer une mesure ───────────────────────────────────────────────────
@@ -106,18 +96,6 @@ class GlucoseProvider extends ChangeNotifier {
       await _persistLocal();
       notifyListeners();
     } catch (_) {}
-  }
-
-  // ── Alertes glycémie ───────────────────────────────────────────────────────
-  void _checkAlerts(GlucoseReading reading, List<AlertRule> rules) {
-    final v = reading.displayValue;
-    for (final rule in rules.where((r) => r.isEnabled)) {
-      // matches() gère above / below / between avec threshold1 et threshold2
-      if (rule.matches(v)) {
-        // Ici tu peux appeler NotificationService pour l'alerte
-        // Ex: NotificationService.instance.showAlert(rule, v);
-      }
-    }
   }
 
   // ── Cache local ────────────────────────────────────────────────────────────
