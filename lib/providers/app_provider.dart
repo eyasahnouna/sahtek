@@ -9,6 +9,7 @@ import '../models/day_record.dart';
 import '../models/meal_entry.dart';
 import '../services/firebase_service.dart';
 import '../services/notification_service.dart';
+import '../services/voice_entry_parser.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AppProvider
@@ -325,6 +326,34 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
     _persistLocal();
     _saveToFirestore(_records[_currentKey]!);
+  }
+
+  /// Ranger dans le record courant les valeurs dictées (saisie vocale)
+  void applyVoiceItems(List<VoiceItem> items) {
+    _ensureRecord();
+    for (final it in items) {
+      if (it.slotId == spontaneousSlot) {
+        addSensorMeasure(
+          name: '',
+          time: it.time ?? TimeOfDay.now(),
+          glycemie: it.value,
+          glycemieMode: it.mode,
+        );
+        continue;
+      }
+      final e = _records[_currentKey]!.entries
+          .where((e) => e.slotId == it.slotId)
+          .firstOrNull;
+      if (e == null) continue;
+      updateEntry(it.field == VoiceField.dose
+          ? e.copyWith(dose: it.value, doseTime: it.time)
+          : e.copyWith(
+              glycemie: it.value,
+              glycemieMode: it.value != null ? it.mode : null,
+              mealTime: it.time,
+              doseTime: it.time,
+            ));
+    }
   }
 
   /// Supprimer une entrée (snack ou mesure libre)

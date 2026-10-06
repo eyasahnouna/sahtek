@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/sahtek_logo.dart';
+import '../l10n/l10n.dart';
+import 'settings_screen.dart';
 
 // ── AuthScreen ────────────────────────────────────────────────────────────────
 // Le StreamBuilder dans _AuthGate gère la navigation automatiquement :
@@ -63,7 +65,7 @@ class _AuthScreenState extends State<AuthScreen>
   // ── Sign In ─────────────────────────────────────────────────────────────────
   Future<void> _signIn() async {
     if (_emailCtrl.text.trim().isEmpty || _passCtrl.text.isEmpty) {
-      setState(() => _error = 'Remplissez tous les champs'); return;
+      setState(() => _error = 'Remplissez tous les champs'.tr); return;
     }
     setState(() { _loading = true; _error = null; });
     try {
@@ -82,13 +84,13 @@ class _AuthScreenState extends State<AuthScreen>
     if (_nameCtrl.text.trim().isEmpty ||
         _emailCtrl.text.trim().isEmpty ||
         _passCtrl.text.isEmpty) {
-      setState(() => _error = 'Remplissez tous les champs'); return;
+      setState(() => _error = 'Remplissez tous les champs'.tr); return;
     }
     if (_passCtrl.text != _confirmCtrl.text) {
-      setState(() => _error = 'Les mots de passe ne correspondent pas'); return;
+      setState(() => _error = 'Les mots de passe ne correspondent pas'.tr); return;
     }
     if (_passCtrl.text.length < 6) {
-      setState(() => _error = 'Mot de passe trop court (6 car. min.)'); return;
+      setState(() => _error = 'Mot de passe trop court (6 car. min.)'.tr); return;
     }
     setState(() { _loading = true; _error = null; });
     try {
@@ -108,12 +110,12 @@ class _AuthScreenState extends State<AuthScreen>
   // ── Reset password ──────────────────────────────────────────────────────────
   Future<void> _resetPassword() async {
     if (_emailCtrl.text.trim().isEmpty) {
-      setState(() => _error = 'Entrez votre email d\'abord'); return;
+      setState(() => _error = 'Entrez votre email d\'abord'.tr); return;
     }
     try {
       await FirebaseService.instance.resetPassword(_emailCtrl.text);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Email de réinitialisation envoyé'),
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Email de réinitialisation envoyé'.tr),
         backgroundColor: AppTheme.success,
       ));
     } catch (e) {
@@ -123,12 +125,12 @@ class _AuthScreenState extends State<AuthScreen>
 
   String _msg(String e) {
     if (e.contains('user-not-found') || e.contains('wrong-password') ||
-        e.contains('invalid-credential')) return 'Email ou mot de passe incorrect';
-    if (e.contains('email-already-in-use')) return 'Cet email est déjà utilisé';
-    if (e.contains('weak-password'))   return 'Mot de passe trop faible';
-    if (e.contains('invalid-email'))   return 'Email invalide';
-    if (e.contains('network'))         return 'Vérifiez votre connexion internet';
-    return 'Erreur : ${e.replaceAll(RegExp(r'\[.*?\]'), '').trim()}';
+        e.contains('invalid-credential')) return 'Email ou mot de passe incorrect'.tr;
+    if (e.contains('email-already-in-use')) return 'Cet email est déjà utilisé'.tr;
+    if (e.contains('weak-password'))   return 'Mot de passe trop faible'.tr;
+    if (e.contains('invalid-email'))   return 'Email invalide'.tr;
+    if (e.contains('network'))         return 'Vérifiez votre connexion internet'.tr;
+    return 'Erreur : {e}'.trp({'e': e.replaceAll(RegExp(r'\[.*?\]'), '').trim()});
   }
 
   // ── Onglet Connexion ──────────────────────────────────────────────────────────
@@ -138,8 +140,8 @@ class _AuthScreenState extends State<AuthScreen>
           controller: _emailCtrl,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-              labelText: 'Email',
+          decoration: InputDecoration(
+              labelText: 'Email'.tr,
               prefixIcon: Icon(Icons.email_rounded, size: 18))),
       const SizedBox(height: 12),
       TextField(
@@ -148,7 +150,7 @@ class _AuthScreenState extends State<AuthScreen>
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _signIn(),
           decoration: InputDecoration(
-              labelText: 'Mot de passe',
+              labelText: 'Mot de passe'.tr,
               prefixIcon: const Icon(Icons.lock_rounded, size: 18),
               suffixIcon: IconButton(
                   icon: Icon(_showPass
@@ -160,7 +162,7 @@ class _AuthScreenState extends State<AuthScreen>
         alignment: Alignment.centerRight,
         child: TextButton(
           onPressed: _resetPassword,
-          child: Text('Mot de passe oublié ?',
+          child: Text('Mot de passe oublié ?'.tr,
               style: AppFonts.label(color: AppTheme.primary, size: 12)),
         ),
       ),
@@ -200,7 +202,7 @@ class _AuthScreenState extends State<AuthScreen>
                           color: sel ? Colors.white : Colors.grey),
                       const SizedBox(width: 5),
                       Text(
-                          r == 'patient' ? 'Patient' : 'Médecin',
+                          r == 'patient' ? 'Patient'.tr : 'Médecin'.tr,
                           style: AppFonts.label(
                               color: sel ? Colors.white : Colors.grey, size: 12)
                               .copyWith(
@@ -219,16 +221,16 @@ class _AuthScreenState extends State<AuthScreen>
       TextField(
           controller: _nameCtrl,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-              labelText: 'Nom complet',
+          decoration: InputDecoration(
+              labelText: 'Nom complet'.tr,
               prefixIcon: Icon(Icons.person_rounded, size: 18))),
       const SizedBox(height: 10),
       TextField(
           controller: _emailCtrl,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-              labelText: 'Email',
+          decoration: InputDecoration(
+              labelText: 'Email'.tr,
               prefixIcon: Icon(Icons.email_rounded, size: 18))),
       const SizedBox(height: 10),
       TextField(
@@ -236,7 +238,7 @@ class _AuthScreenState extends State<AuthScreen>
           obscureText: !_showPass,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-              labelText: 'Mot de passe (6 car. min)',
+              labelText: 'Mot de passe (6 car. min)'.tr,
               prefixIcon: const Icon(Icons.lock_rounded, size: 18),
               suffixIcon: IconButton(
                   icon: Icon(_showPass
@@ -249,8 +251,8 @@ class _AuthScreenState extends State<AuthScreen>
           obscureText: !_showPass,
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _signUp(),
-          decoration: const InputDecoration(
-              labelText: 'Confirmer le mot de passe',
+          decoration: InputDecoration(
+              labelText: 'Confirmer le mot de passe'.tr,
               prefixIcon: Icon(Icons.lock_outline_rounded, size: 18))),
     ]);
   }
@@ -261,9 +263,23 @@ class _AuthScreenState extends State<AuthScreen>
       backgroundColor: AppTheme.bgColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Column(
             children: [
+              // ── Choix de la langue (accessible avant connexion) ─────────────
+              SizedBox(
+                height: 40,
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: IconButton(
+                    icon: const Icon(Icons.language_rounded,
+                        color: AppTheme.primary),
+                    tooltip: 'Langue'.tr,
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => const SettingsScreen())),
+                  ),
+                ),
+              ),
               // ── Logo animé ──────────────────────────────────────────────────
               const SahtekLogo(size: 88, animate: true, showText: true),
               const SizedBox(height: 32),
@@ -298,9 +314,9 @@ class _AuthScreenState extends State<AuthScreen>
                           labelColor: Colors.white,
                           unselectedLabelColor: Colors.grey,
                           dividerColor: Colors.transparent,
-                          tabs: const [
-                            Tab(text: 'Connexion'),
-                            Tab(text: 'Inscription'),
+                          tabs: [
+                            Tab(text: 'Connexion'.tr),
+                            Tab(text: 'Inscription'.tr),
                           ],
                         ),
                       ),
@@ -384,8 +400,8 @@ class _AuthScreenState extends State<AuthScreen>
                                   )
                                 : Text(
                                     _tabs.index == 0
-                                        ? 'Se connecter'
-                                        : 'Créer mon compte',
+                                        ? 'Se connecter'.tr
+                                        : 'Créer mon compte'.tr,
                                     style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600),

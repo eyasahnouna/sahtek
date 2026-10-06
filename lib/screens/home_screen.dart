@@ -9,8 +9,11 @@ import '../providers/app_provider.dart';
 import '../services/firebase_service.dart';
 import '../services/image_storage_service.dart';
 import '../utils/app_theme.dart';
+import 'settings_screen.dart';
+import 'voice_entry_sheet.dart';
 import '../widgets/logout_button.dart';
 import '../widgets/sahtek_logo.dart';
+import '../l10n/l10n.dart';
 
 // ── Palette locale ────────────────────────────────────────────────────────────
 const _kInk         = Color(0xFF1A2E3B);
@@ -173,7 +176,27 @@ class _HomeScreenState extends State<HomeScreen> {
         content: Row(children: [
           const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
           const SizedBox(width: 10),
-          Text('Mesure spontanée ajoutée à ${_fmtTime(added)}'),
+          Text('Mesure spontanée ajoutée à {time}'
+              .trp({'time': _fmtTime(added)})),
+        ]),
+      ));
+    }
+  }
+
+  Future<void> _voiceSheet(BuildContext ctx) async {
+    final saved = await showModalBottomSheet<int>(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const VoiceEntrySheet(),
+    );
+    if (saved != null && ctx.mounted) {
+      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+        content: Row(children: [
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: 10),
+          Expanded(child: Text('{n} valeur(s) enregistrée(s) par la voix'
+              .trp({'n': saved}))),
         ]),
       ));
     }
@@ -202,23 +225,26 @@ class _HomeScreenState extends State<HomeScreen> {
         for (final s in spont.where((e) => _period(e.mealTime) == period))
           _SnackCard(entry: s, dateKey: dk, onUpdate: upd,
               color: _kSpontColor, icon: Icons.bolt_rounded,
-              badge: 'Spontanée',
+              badge: 'Spontanée'.tr,
               onDelete: () => p.removeEntry(s.id)),
       ];
 
       return Scaffold(
         backgroundColor: AppTheme.bgColor,
-        floatingActionButton: _SpontaneousFab(
-            onTap: () => _addMesureSheet(context, p)),
+        floatingActionButton: Row(mainAxisSize: MainAxisSize.min, children: [
+          _VoiceFab(onTap: () => _voiceSheet(context)),
+          const SizedBox(width: 10),
+          _SpontaneousFab(onTap: () => _addMesureSheet(context, p)),
+        ]),
         body: Column(children: [
           _Header(provider: p, record: record),
           Expanded(child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
             children: [
-              const _PeriodHeader(label: 'Matin', icon: Icons.wb_twilight_rounded),
-              _MealCard(title: 'Petit déjeuner', icon: Icons.free_breakfast_rounded,
+              _PeriodHeader(label: 'Matin'.tr, icon: Icons.wb_twilight_rounded),
+              _MealCard(title: 'Petit déjeuner'.tr, icon: Icons.free_breakfast_rounded,
                   color: AppTheme.breakfastColor,
-                  beforeLabel: 'À jeun · avant le repas',
+                  beforeLabel: 'À jeun · avant le repas'.tr,
                   eMesure: _get(record, _kBkfMesure),
                   eDose:   _get(record, _kBkfDose),
                   eAfter:  _get(record, _kBkfAfter),
@@ -229,8 +255,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _SnackSeparator(sectionKey: 'bkf',
                   onAdd: () => p.addSnack(afterIndex: 2, sectionKey: 'bkf')),
 
-              const _PeriodHeader(label: 'Midi', icon: Icons.wb_sunny_rounded),
-              _MealCard(title: 'Déjeuner', icon: Icons.lunch_dining_rounded,
+              _PeriodHeader(label: 'Midi'.tr, icon: Icons.wb_sunny_rounded),
+              _MealCard(title: 'Déjeuner'.tr, icon: Icons.lunch_dining_rounded,
                   color: AppTheme.lunchColor,
                   eMesure: _get(record, _kLunchMesure),
                   eDose:   _get(record, _kLunchDose),
@@ -242,8 +268,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _SnackSeparator(sectionKey: 'lunch',
                   onAdd: () => p.addSnack(afterIndex: 5, sectionKey: 'lunch')),
 
-              const _PeriodHeader(label: 'Soir', icon: Icons.wb_cloudy_rounded),
-              _MealCard(title: 'Dîner', icon: Icons.dinner_dining_rounded,
+              _PeriodHeader(label: 'Soir'.tr, icon: Icons.wb_cloudy_rounded),
+              _MealCard(title: 'Dîner'.tr, icon: Icons.dinner_dining_rounded,
                   color: AppTheme.dinnerColor,
                   eMesure: _get(record, _kDinerMesure),
                   eDose:   _get(record, _kDinerDose),
@@ -255,8 +281,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _SnackSeparator(sectionKey: 'diner',
                   onAdd: () => p.addSnack(afterIndex: 8, sectionKey: 'diner')),
 
-              const _PeriodHeader(label: 'Nuit', icon: Icons.nights_stay_rounded),
-              _SimpleCard(label: 'Avant coucher', icon: Icons.bedtime_rounded,
+              _PeriodHeader(label: 'Nuit'.tr, icon: Icons.nights_stay_rounded),
+              _SimpleCard(label: 'Avant coucher'.tr, icon: Icons.bedtime_rounded,
                   color: const Color(0xFF3F7FD9), entry: _get(record, _kBedtime),
                   dateKey: dk, onUpdate: upd),
               ...spontFor(3),
@@ -294,9 +320,35 @@ class _SpontaneousFab extends StatelessWidget {
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             const Icon(Icons.add_rounded, color: Colors.white, size: 20),
             const SizedBox(width: 8),
-            Text('Mesure spontanée', style: AppFonts.label(
+            Text('Mesure spontanée'.tr, style: AppFonts.label(
                 color: Colors.white, size: 14).copyWith(fontWeight: FontWeight.w600)),
           ]),
+        ),
+      ),
+    ),
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  Bouton flottant « Saisie vocale »
+// ══════════════════════════════════════════════════════════════════════════════
+class _VoiceFab extends StatelessWidget {
+  final VoidCallback onTap;
+  const _VoiceFab({required this.onTap});
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: 'Saisie vocale'.tr,
+    child: Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 6,
+      shadowColor: AppTheme.primary.withValues(alpha: 0.35),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: const Padding(
+          padding: EdgeInsets.all(14),
+          child: Icon(Icons.mic_rounded, color: AppTheme.primary, size: 24),
         ),
       ),
     ),
@@ -361,8 +413,8 @@ class _SpontaneousSheetState extends State<_SpontaneousSheet> {
                 const SizedBox(width: 12),
                 Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Mesure spontanée', style: AppFonts.title(size: 17)),
-                  Text('Une glycémie prise en dehors des repas',
+                  Text('Mesure spontanée'.tr, style: AppFonts.title(size: 17)),
+                  Text('Une glycémie prise en dehors des repas'.tr,
                       style: AppFonts.body(color: _kMuted, size: 12)),
                 ])),
               ]),
@@ -442,8 +494,8 @@ class _SpontaneousSheetState extends State<_SpontaneousSheet> {
                 Expanded(child: TextField(
                   controller: _label,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    hintText: 'Libellé (ex : avant sport)',
+                  decoration: InputDecoration(
+                    hintText: 'Libellé (ex : avant sport)'.tr,
                     prefixIcon: Icon(Icons.edit_note_rounded, size: 20),
                     contentPadding: EdgeInsets.symmetric(vertical: 13),
                   ),
@@ -455,7 +507,7 @@ class _SpontaneousSheetState extends State<_SpontaneousSheet> {
                 child: ElevatedButton.icon(
                   onPressed: _save,
                   icon: const Icon(Icons.check_rounded, size: 18),
-                  label: const Text('Enregistrer la mesure'),
+                  label: Text('Enregistrer la mesure'.tr),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -624,7 +676,7 @@ class _MealCardState extends State<_MealCard>
     } on ImageUploadException catch (e) {
       _showError(e.message);
     } catch (e) {
-      _showError('Erreur lors de l\'envoi de l\'image.');
+      _showError('Erreur lors de l\'envoi de l\'image.'.tr);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -727,7 +779,7 @@ class _MealCardState extends State<_MealCard>
           child: _expanded
               ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SizedBox(height: 14),
-            _SectionLabel(label: widget.beforeLabel, color: widget.color),
+            _SectionLabel(label: widget.beforeLabel.tr, color: widget.color),
             const SizedBox(height: 8),
             _ThreeCol(
               left:   _MesureInput(entry: widget.eMesure, color: widget.color, onUpdate: widget.onUpdate),
@@ -738,7 +790,7 @@ class _MealCardState extends State<_MealCard>
             const SizedBox(height: 14),
             _DashedLine(color: widget.color),
             const SizedBox(height: 12),
-            _SectionLabel(label: '2 h après le repas', color: widget.color),
+            _SectionLabel(label: '2 h après le repas'.tr, color: widget.color),
             const SizedBox(height: 8),
             _TwoCol(
               left:   _MesureInput(entry: widget.eAfter, color: widget.color, onUpdate: widget.onUpdate),
@@ -867,7 +919,7 @@ class _SimpleCardState extends State<_SimpleCard>
     } on ImageUploadException catch (e) {
       _showError(e.message);
     } catch (e) {
-      _showError('Erreur lors de l\'envoi de l\'image.');
+      _showError('Erreur lors de l\'envoi de l\'image.'.tr);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -1016,7 +1068,7 @@ class _SnackCardState extends State<_SnackCard> {
     } on ImageUploadException catch (e) {
       _showError(e.message);
     } catch (e) {
-      _showError('Erreur lors de l\'envoi de l\'image.');
+      _showError('Erreur lors de l\'envoi de l\'image.'.tr);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -1067,7 +1119,7 @@ class _SnackCardState extends State<_SnackCard> {
         Row(children: [
           _Pill(icon: widget.icon, color: widget.color),
           const SizedBox(width: 12),
-          Expanded(child: _CardTitle(title: widget.entry.name,
+          Expanded(child: _CardTitle(title: widget.entry.name.tr,
               subtitle: _fmtTime(widget.entry.mealTime), badge: widget.badge,
               badgeColor: widget.color)),
           if (hasPhoto)
@@ -1113,7 +1165,7 @@ class _SnackCardState extends State<_SnackCard> {
             ),
           IconButton(
             onPressed: widget.onDelete,
-            tooltip: 'Supprimer',
+            tooltip: 'Supprimer'.tr,
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.delete_outline_rounded, size: 19, color: _kMuted),
           ),
@@ -1158,36 +1210,36 @@ class _PhotoBottomSheet extends StatelessWidget {
                   color: Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 16),
-          Text('Photo du repas',
+          Text('Photo du repas'.tr,
               style: AppFonts.title(size: 16)
                   .copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           _SheetTile(
             icon: Icons.camera_alt_rounded,
             color: AppTheme.secondary,
-            label: 'Prendre une photo',
-            sub: 'Appareil photo',
+            label: 'Prendre une photo'.tr,
+            sub: 'Appareil photo'.tr,
             onTap: () => onPickSource?.call(ImageSource.camera),
           ),
           _SheetTile(
             icon: Icons.photo_library_rounded,
             color: Colors.blueGrey,
-            label: 'Choisir depuis la galerie',
-            sub: 'Photos et fichiers',
+            label: 'Choisir depuis la galerie'.tr,
+            sub: 'Photos et fichiers'.tr,
             onTap: () => onPickSource?.call(ImageSource.gallery),
           ),
           if (hasImage && onView != null)
             _SheetTile(
               icon: Icons.zoom_in_rounded,
               color: Colors.indigo,
-              label: 'Voir la photo',
+              label: 'Voir la photo'.tr,
               onTap: onView!,
             ),
           if (hasImage && onDelete != null)
             _SheetTile(
               icon: Icons.delete_outline_rounded,
               color: Colors.red.shade400,
-              label: 'Supprimer la photo',
+              label: 'Supprimer la photo'.tr,
               onTap: onDelete!,
             ),
         ]),
@@ -1292,7 +1344,7 @@ class _MesureInputState extends State<_MesureInput> {
                 Icon(_conv ? Icons.sensors_rounded : Icons.straighten_rounded,
                     size: 11, color: _conv ? Colors.white : Colors.grey.shade400),
                 const SizedBox(width: 4),
-                Text(_conv ? '×0.18' : 'Normal',
+                Text(_conv ? '×0.18' : 'Normal'.tr,
                     style: AppFonts.label(
                         color: _conv ? Colors.white : Colors.grey.shade500, size: 10)
                         .copyWith(fontWeight: FontWeight.w700)),
@@ -1378,7 +1430,7 @@ class _DoseInputState extends State<_DoseInput> {
             mainAxisAlignment: MainAxisAlignment.center, children: [
               const Icon(Icons.medication_liquid_rounded, size: 11, color: c),
               const SizedBox(width: 4),
-              Text('Insuline', style: AppFonts.label(color: c, size: 10)
+              Text('Insuline'.tr, style: AppFonts.label(color: c, size: 10)
                   .copyWith(fontWeight: FontWeight.w700)),
             ]),
       ),
@@ -1437,7 +1489,7 @@ class _HeureInput extends StatelessWidget {
                 Icon(Icons.access_time_rounded, size: 11,
                     color: color.withValues(alpha: 0.7)),
                 const SizedBox(width: 4),
-                Text('Heure', style: AppFonts.label(
+                Text('Heure'.tr, style: AppFonts.label(
                     color: color.withValues(alpha: 0.7), size: 10)
                     .copyWith(fontWeight: FontWeight.w700)),
               ]),
@@ -1456,7 +1508,7 @@ class _HeureInput extends StatelessWidget {
                   .copyWith(letterSpacing: 1.5)),
         ),
         const SizedBox(height: 5),
-        Text('appuyer', style: AppFonts.label(
+        Text('appuyer'.tr, style: AppFonts.label(
             color: Colors.grey.shade400, size: 9)),
       ]),
     );
@@ -1678,7 +1730,7 @@ class _SnackSeparator extends StatelessWidget {
         visualDensity: VisualDensity.compact,
       ),
       icon: const Icon(Icons.add_circle_outline_rounded, size: 17),
-      label: Text('Ajouter un snack', style: AppFonts.label(
+      label: Text('Ajouter un snack'.tr, style: AppFonts.label(
           color: AppTheme.snackColor, size: 12)
           .copyWith(fontWeight: FontWeight.w600)),
     ),
@@ -1709,7 +1761,7 @@ class _Header extends StatelessWidget {
     final isToday = DateUtils.isSameDay(date, DateTime.now());
     final avg     = record.averageGlycemieAffichee;
     final count   = record.entries.where((e) => e.hasGlycemie).length;
-    final weekday = DateFormat('EEEE', 'fr_FR').format(date);
+    final weekday = DateFormat('EEEE', L10n.dateLocale).format(date);
 
     return Container(
       decoration: BoxDecoration(
@@ -1738,6 +1790,7 @@ class _Header extends StatelessWidget {
                     child: SizedBox(width: 16, height: 16,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white70))),
+              const SettingsIconButton(),
               const LogoutIconButton(),
             ]),
             const SizedBox(height: 10),
@@ -1755,11 +1808,11 @@ class _Header extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Column(children: [
-                      Text(isToday ? "Aujourd'hui"
+                      Text(isToday ? "Aujourd'hui".tr
                           : '${weekday[0].toUpperCase()}${weekday.substring(1)}',
                           style: AppFonts.label(color: Colors.white70, size: 12)),
                       Row(mainAxisSize: MainAxisSize.min, children: [
-                        Text(DateFormat('d MMMM yyyy', 'fr_FR').format(date),
+                        Text(DateFormat('d MMMM yyyy', L10n.dateLocale).format(date),
                             style: AppFonts.bold(color: Colors.white, size: 17)),
                         const SizedBox(width: 6),
                         const Icon(Icons.calendar_month_rounded,
@@ -1779,7 +1832,7 @@ class _Header extends StatelessWidget {
                 style: TextButton.styleFrom(
                     foregroundColor: Colors.white,
                     visualDensity: VisualDensity.compact),
-                child: Text("Revenir à aujourd'hui", style: AppFonts.label(
+                child: Text("Revenir à aujourd'hui".tr, style: AppFonts.label(
                     color: Colors.white, size: 12)
                     .copyWith(decoration: TextDecoration.underline,
                         decorationColor: Colors.white70)),
@@ -1796,17 +1849,17 @@ class _Header extends StatelessWidget {
                 border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
               ),
               child: Row(children: [
-                _SumItem(label: 'Glycémie moy.',
+                _SumItem(label: 'Glycémie moy.'.tr,
                     value: avg > 0 ? avg.toStringAsFixed(2) : '--', unit: 'g/L',
                     dot: avg > 0 ? AppTheme.glucoseColor(avg) : null,
                     caption: avg > 0 ? AppTheme.glucoseLabel(avg) : null),
                 const _SumDivider(),
-                _SumItem(label: 'Insuline',
+                _SumItem(label: 'Insuline'.tr,
                     value: record.totalDose > 0
                         ? record.totalDose.toStringAsFixed(1) : '--',
                     unit: 'UI'),
                 const _SumDivider(),
-                _SumItem(label: 'Mesures',
+                _SumItem(label: 'Mesures'.tr,
                     value: count > 0 ? '$count' : '--', unit: ''),
               ]),
             ),

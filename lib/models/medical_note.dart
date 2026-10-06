@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../l10n/l10n.dart';
 
 /// Note médicale dans le dossier partagé
 class MedicalNote {
@@ -16,11 +17,11 @@ class MedicalNote {
 
   String get categoryLabel {
     switch (category) {
-      case 'glucose':  return 'Glycémie';
-      case 'insulin':  return 'Insuline';
-      case 'symptom':  return 'Symptôme';
-      case 'general':  return 'Général';
-      default:         return 'Note';
+      case 'glucose':  return 'Glycémie'.tr;
+      case 'insulin':  return 'Insuline'.tr;
+      case 'symptom':  return 'Symptôme'.tr;
+      case 'general':  return 'Général'.tr;
+      default:         return 'Note'.tr;
     }
   }
 

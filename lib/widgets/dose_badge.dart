@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/meal_entry.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 // ── Indicateur couleur glycémie ───────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ class GlycemieBadge extends StatelessWidget {
     final bool converti = mode == GlycemieMode.convertie;
     final String note   = converti
         ? '${glycemieRaw.toStringAsFixed(1)} × 0.18'
-        : 'Valeur directe';
+        : 'Valeur directe'.tr;
 
     final indicator = GlycemieIndicator.of(glycemieConv);
 
@@ -98,7 +99,7 @@ class GlycemieBadge extends StatelessWidget {
                     color: indicator.color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 5),
-              Text(indicator.label,
+              Text(indicator.label.tr,
                   style: AppFonts.label(
                       color: indicator.color, size: 11)
                       .copyWith(fontWeight: FontWeight.w600)),
@@ -160,7 +161,7 @@ class DoseBadge extends StatelessWidget {
         Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Dose d'insuline",
+            Text("Dose d'insuline".tr,
                 style: AppFonts.label(
                     color: color.withOpacity(0.75), size: 11)
                     .copyWith(fontWeight: FontWeight.w600)),

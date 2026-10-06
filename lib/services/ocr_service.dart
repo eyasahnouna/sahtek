@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import '../l10n/l10n.dart';
 
 /// Résultat de la reconnaissance OCR
 class OcrResult {
@@ -37,7 +38,7 @@ class OcrService {
     } catch (e) {
       return OcrResult(
         rawText: '',
-        errorMessage: 'Impossible d\'accéder à la caméra : ${e.toString()}',
+        errorMessage: 'Impossible d\'accéder à la caméra : {e}'.trp({'e': e}),
       );
     }
   }
@@ -54,7 +55,7 @@ class OcrService {
       if (rawText.trim().isEmpty) {
         return OcrResult(
           rawText: rawText,
-          errorMessage: 'Aucun texte détecté. Réessayez en vous rapprochant de l\'écran.',
+          errorMessage: 'Aucun texte détecté. Réessayez en vous rapprochant de l\'écran.'.tr,
         );
       }
 
@@ -63,7 +64,8 @@ class OcrService {
       if (value == null) {
         return OcrResult(
           rawText: rawText,
-          errorMessage: 'Valeur glycémique non trouvée. Texte lu : "$rawText"',
+          errorMessage: 'Valeur glycémique non trouvée. Texte lu : "{text}"'
+              .trp({'text': rawText}),
         );
       }
 

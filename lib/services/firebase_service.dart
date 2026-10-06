@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../models/day_record.dart';
 import 'email_service.dart';
 import 'image_storage_service.dart';
+import '../l10n/l10n.dart';
 
 /// Service Firebase — Auth + Firestore
 class FirebaseService {
@@ -105,9 +106,9 @@ class FirebaseService {
     required String email,
     String role = 'viewer',
   }) async {
-    if (currentUid == null) throw Exception('Non connecté');
+    if (currentUid == null) throw Exception('Non connecté'.tr);
     if (email.trim().toLowerCase() == currentEmail?.toLowerCase()) {
-      throw Exception('Vous ne pouvez pas vous inviter vous-même');
+      throw Exception('Vous ne pouvez pas vous inviter vous-même'.tr);
     }
 
     // Vérifier doublon
@@ -115,7 +116,7 @@ class FirebaseService {
         .where('ownerId', isEqualTo: currentUid)
         .where('email',   isEqualTo: email.trim().toLowerCase())
         .get();
-    if (existing.docs.isNotEmpty) throw Exception('Déjà invité');
+    if (existing.docs.isNotEmpty) throw Exception('Déjà invité'.tr);
 
     await _db.collection('collaborators').add({
       'ownerId':   currentUid,
@@ -289,13 +290,13 @@ class FirebaseCollaborator {
   bool get isAccepted => status == 'accepted';
   bool get isPending  => status == 'pending';
 
-  String get roleLabel => role == 'doctor' ? 'Médecin' : 'Lecteur';
+  String get roleLabel => role == 'doctor' ? 'Médecin'.tr : 'Lecteur'.tr;
 
   String get statusLabel {
     switch (status) {
-      case 'accepted': return 'Accepté';
-      case 'rejected': return 'Refusé';
-      default:         return 'En attente';
+      case 'accepted': return 'Accepté'.tr;
+      case 'rejected': return 'Refusé'.tr;
+      default:         return 'En attente'.tr;
     }
   }
 }

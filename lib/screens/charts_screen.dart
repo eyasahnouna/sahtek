@@ -6,6 +6,7 @@ import '../models/meal_entry.dart';
 import '../widgets/logout_button.dart';
 import '../providers/app_provider.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 /// Point de données extrait d'un MealEntry
 class _DataPoint {
@@ -49,18 +50,18 @@ class _ChartsScreenState extends State<ChartsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Graphiques'),
+        title: Text('Graphiques'.tr),
         actions: const [LogoutIconButton()],
         bottom: TabBar(
           controller: _tabs,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white54,
-          tabs: const [
+          tabs: [
             Tab(icon: Icon(Icons.water_drop_rounded, size: 18),
-                text: 'Glycémie'),
+                text: 'Glycémie'.tr),
             Tab(icon: Icon(Icons.medication_liquid_rounded, size: 18),
-                text: 'Insuline'),
+                text: 'Insuline'.tr),
           ],
         ),
       ),
@@ -88,12 +89,12 @@ class _PeriodFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const opts = [('24h', '24h'), ('7d', '7 jours'), ('30d', '30 jours')];
+    final opts = [('24h', '24h'), ('7d', '7 jours'.tr), ('30d', '30 jours'.tr)];
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: Row(children: [
-        Text('Période :', style: AppFonts.label(size: 12)),
+        Text('Période :'.tr, style: AppFonts.label(size: 12)),
         const SizedBox(width: 10),
         ...opts.map((o) {
           final sel = selected == o.$1;
@@ -153,7 +154,7 @@ class _GlucoseTab extends StatelessWidget {
         if (dt.isBefore(cutoff)) continue;
         final gly = entry.glycemieAffichee ?? 0;
         points.add(_DataPoint(
-          dt, gly, entry.name,
+          dt, gly, entry.name.tr,
           AppTheme.glucoseColor(gly),
         ));
       }
@@ -174,16 +175,16 @@ class _GlucoseTab extends StatelessWidget {
         Card(child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Courbe glycémique', style: AppFonts.title(size: 14)),
+            Text('Courbe glycémique'.tr, style: AppFonts.title(size: 14)),
             const SizedBox(height: 4),
             Wrap(spacing: 14, runSpacing: 4, children: [
-              _LegendDot(color: AppTheme.primary, label: 'Glycémie (Mg/dl)'),
+              _LegendDot(color: AppTheme.primary, label: 'Glycémie (Mg/dl)'.tr),
               _LegendDot(color: AppTheme.success,
-                  label: 'Zone normale (0.7–1.6)', dashed: true),
+                  label: 'Zone normale (0.7–1.6)'.tr, dashed: true),
             ]),
             const SizedBox(height: 16),
             points.isEmpty
-                ? _EmptyChart(label: 'Aucune mesure sur cette période')
+                ? _EmptyChart(label: 'Aucune mesure sur cette période'.tr)
                 : SizedBox(height: 220,
                 child: _GlucoseLineChart(points: points)),
           ]),
@@ -194,10 +195,10 @@ class _GlucoseTab extends StatelessWidget {
         Card(child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Historique', style: AppFonts.title(size: 14)),
+            Text('Historique'.tr, style: AppFonts.title(size: 14)),
             const SizedBox(height: 10),
             points.isEmpty
-                ? Text('Aucune mesure',
+                ? Text('Aucune mesure'.tr,
                 style: AppFonts.body(color: Colors.grey))
                 : Column(children: points.reversed.take(20).map((p) =>
                 _GlucoseTile(point: p)).toList()),
@@ -348,7 +349,7 @@ class _InsulinTab extends StatelessWidget {
             : baseDate;
         if (dt.isBefore(cutoff)) continue;
         points.add(_DataPoint(
-            dt, entry.dose!, entry.name, AppTheme.secondary));
+            dt, entry.dose!, entry.name.tr, AppTheme.secondary));
       }
     }
     points.sort((a, b) => a.time.compareTo(b.time));
@@ -366,13 +367,13 @@ class _InsulinTab extends StatelessWidget {
         Card(child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Consommation d\'insuline',
+            Text('Consommation d\'insuline'.tr,
                 style: AppFonts.title(size: 14)),
             const SizedBox(height: 4),
-            _LegendDot(color: AppTheme.secondary, label: 'Dose insuline (UI)'),
+            _LegendDot(color: AppTheme.secondary, label: 'Dose insuline (UI)'.tr),
             const SizedBox(height: 16),
             points.isEmpty
-                ? _EmptyChart(label: 'Aucune dose sur cette période')
+                ? _EmptyChart(label: 'Aucune dose sur cette période'.tr)
                 : SizedBox(height: 220,
                 child: _InsulinLineChart(points: points)),
           ]),
@@ -381,10 +382,10 @@ class _InsulinTab extends StatelessWidget {
         Card(child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Historique doses', style: AppFonts.title(size: 14)),
+            Text('Historique doses'.tr, style: AppFonts.title(size: 14)),
             const SizedBox(height: 10),
             points.isEmpty
-                ? Text('Aucune dose', style: AppFonts.body(color: Colors.grey))
+                ? Text('Aucune dose'.tr, style: AppFonts.body(color: Colors.grey))
                 : Column(children: points.reversed.take(20).map((p) =>
                 _InsulinTile(point: p)).toList()),
           ]),

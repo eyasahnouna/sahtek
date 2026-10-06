@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 enum GlycemieMode { directe, convertie }
 
@@ -13,11 +14,11 @@ enum MealType {
 extension MealTypeExtension on MealType {
   String get label {
     switch (this) {
-      case MealType.breakfast: return 'Petit déjeuner';
-      case MealType.lunch:     return 'Déjeuner';
-      case MealType.dinner:    return 'Dîner';
-      case MealType.snack:     return 'Snack';
-      case MealType.mesure:    return 'Mesure';
+      case MealType.breakfast: return 'Petit déjeuner'.tr;
+      case MealType.lunch:     return 'Déjeuner'.tr;
+      case MealType.dinner:    return 'Dîner'.tr;
+      case MealType.snack:     return 'Snack'.tr;
+      case MealType.mesure:    return 'Mesure'.tr;
     }
   }
 

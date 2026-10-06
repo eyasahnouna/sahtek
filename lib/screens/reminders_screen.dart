@@ -4,6 +4,7 @@ import '../models/reminder.dart';
 import '../providers/reminder_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/logout_button.dart';
+import '../l10n/l10n.dart';
 
 class RemindersScreen extends StatelessWidget {
   const RemindersScreen({super.key});
@@ -12,7 +13,7 @@ class RemindersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rappels'),
+        title: Text('Rappels'.tr),
         actions: const [LogoutIconButton()],
       ),
       body: Consumer<ReminderProvider>(builder: (_, provider, __) {
@@ -32,7 +33,7 @@ class RemindersScreen extends StatelessWidget {
                     color: AppTheme.primary, size: 18),
                 const SizedBox(width: 10),
                 Expanded(child: Text(
-                  'Les rappels vous notifient chaque jour à l\'heure choisie.',
+                  'Les rappels vous notifient chaque jour à l\'heure choisie.'.tr,
                   style: AppFonts.body(color: AppTheme.primary, size: 13),
                 )),
               ]),
@@ -51,7 +52,7 @@ class RemindersScreen extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => _showAddDialog(context, provider),
               icon: const Icon(Icons.add_rounded, color: AppTheme.primary),
-              label: Text('Ajouter un rappel personnalisé',
+              label: Text('Ajouter un rappel personnalisé'.tr,
                   style: AppFonts.label(color: AppTheme.primary, size: 13)
                       .copyWith(fontWeight: FontWeight.w600)),
               style: OutlinedButton.styleFrom(
@@ -149,12 +150,12 @@ class _ReminderDialogState extends State<_ReminderDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.reminder == null ? 'Nouveau rappel' : 'Modifier',
+      title: Text(widget.reminder == null ? 'Nouveau rappel'.tr : 'Modifier'.tr,
           style: AppFonts.title(size: 16)),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         DropdownButtonFormField<ReminderType>(
           value: _type,
-          decoration: const InputDecoration(labelText: 'Type'),
+          decoration: InputDecoration(labelText: 'Type'.tr),
           items: ReminderType.values.map((t) => DropdownMenuItem(
             value: t,
             child: Row(children: [
@@ -169,7 +170,7 @@ class _ReminderDialogState extends State<_ReminderDialog> {
           const SizedBox(height: 10),
           TextField(
             controller: _labelCtrl,
-            decoration: const InputDecoration(labelText: 'Libellé personnalisé'),
+            decoration: InputDecoration(labelText: 'Libellé personnalisé'.tr),
           ),
         ],
         const SizedBox(height: 12),
@@ -196,7 +197,7 @@ class _ReminderDialogState extends State<_ReminderDialog> {
               const Icon(Icons.access_time_rounded,
                   color: AppTheme.primary, size: 18),
               const SizedBox(width: 10),
-              Text('Heure : ', style: AppFonts.label(size: 13)),
+              Text('Heure : '.tr, style: AppFonts.label(size: 13)),
               Text('${_time.hour.toString().padLeft(2, '0')}:'
                   '${_time.minute.toString().padLeft(2, '0')}',
                   style: AppFonts.bold(color: AppTheme.primary, size: 18)),
@@ -209,7 +210,7 @@ class _ReminderDialogState extends State<_ReminderDialog> {
       ]),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context),
-            child: Text('Annuler', style: AppFonts.body(color: Colors.grey))),
+            child: Text('Annuler'.tr, style: AppFonts.body(color: Colors.grey))),
         ElevatedButton(
           onPressed: () {
             final r = (widget.reminder ??
@@ -221,7 +222,7 @@ class _ReminderDialogState extends State<_ReminderDialog> {
             widget.onSave(r);
             Navigator.pop(context);
           },
-          child: const Text('Enregistrer'),
+          child: Text('Enregistrer'.tr),
         ),
       ],
     );

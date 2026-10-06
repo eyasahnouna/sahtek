@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 /// Bouton déconnexion réutilisable — à placer dans actions d'un AppBar.
 class LogoutIconButton extends StatelessWidget {
@@ -10,7 +11,7 @@ class LogoutIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.logout_rounded, color: Colors.white),
-      tooltip: 'Déconnexion',
+      tooltip: 'Déconnexion'.tr,
       onPressed: () => _confirmer(context),
     );
   }
@@ -20,18 +21,18 @@ class LogoutIconButton extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Déconnexion', style: AppFonts.title(size: 16)),
-        content: Text('Voulez-vous vous déconnecter ?',
+        title: Text('Déconnexion'.tr, style: AppFonts.title(size: 16)),
+        content: Text('Voulez-vous vous déconnecter ?'.tr,
             style: AppFonts.body(size: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text('Annuler'.tr),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Déconnecter'),
+            child: Text('Déconnecter'.tr),
           ),
         ],
       ),

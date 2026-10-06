@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import '../l10n/l10n.dart';
 
 const _kCloudName    = 'dtrng1x4b';    // ex: 'dxyz1234'
 const _kUploadPreset = 'sahtek_unsigned';
@@ -54,16 +55,16 @@ class ImageStorageService {
       rethrow;
     } catch (e) {
       debugPrint('[Cloudinary] Erreur: $e');
-      throw ImageUploadException('Erreur réseau. Vérifiez votre connexion.');
+      throw ImageUploadException('Erreur réseau. Vérifiez votre connexion.'.tr);
     }
   }
 
   String _msg(int code) {
     switch (code) {
-      case 400: return 'Preset upload invalide. Vérifiez la configuration Cloudinary.';
-      case 401: return 'Cloud name invalide. Vérifiez la configuration Cloudinary.';
-      case 420: return 'Limite de requêtes atteinte. Réessayez plus tard.';
-      default:  return 'Erreur lors de l\'envoi de l\'image (code $code).';
+      case 400: return 'Preset upload invalide. Vérifiez la configuration Cloudinary.'.tr;
+      case 401: return 'Cloud name invalide. Vérifiez la configuration Cloudinary.'.tr;
+      case 420: return 'Limite de requêtes atteinte. Réessayez plus tard.'.tr;
+      default:  return 'Erreur lors de l\'envoi de l\'image (code {code}).'.trp({'code': code});
     }
   }
 

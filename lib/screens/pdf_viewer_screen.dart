@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 class PdfViewerScreen extends StatelessWidget {
   final String      patientName;
@@ -18,7 +19,7 @@ class PdfViewerScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Rapport PDF'),
+          Text('Rapport PDF'.tr),
           Text(patientName,
               style: const TextStyle(fontSize: 12, color: Colors.white70)),
         ]),
@@ -32,13 +33,13 @@ class PdfViewerScreen extends StatelessWidget {
         canChangePageFormat: false,
         canChangeOrientation: false,
         pdfFileName: 'Rapport_$patientName.pdf',
-        loadingWidget: const Center(
+        loadingWidget: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(color: AppTheme.primary),
               SizedBox(height: 16),
-              Text('Génération du rapport…',
+              Text('Génération du rapport…'.tr,
                   style: TextStyle(color: AppTheme.primary)),
             ],
           ),

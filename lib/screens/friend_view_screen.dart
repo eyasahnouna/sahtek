@@ -6,6 +6,7 @@ import '../screens/pdf_viewer_screen.dart';
 import '../services/firebase_service.dart';
 import '../services/report_service.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 /// Écran lecture seule — données d'un collaborateur
 class FriendViewScreen extends StatelessWidget {
@@ -24,7 +25,7 @@ class FriendViewScreen extends StatelessWidget {
       appBar: AppBar(
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(friendName),
-          const Text('Lecture seule',
+          Text('Lecture seule'.tr,
               style: TextStyle(fontSize: 11, color: Colors.white70)),
         ]),
         actions: [
@@ -34,10 +35,10 @@ class FriendViewScreen extends StatelessWidget {
             decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20)),
-            child: const Row(mainAxisSize: MainAxisSize.min, children: [
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.visibility_rounded, size: 13, color: Colors.white),
               SizedBox(width: 4),
-              Text('Lecture seule',
+              Text('Lecture seule'.tr,
                   style: TextStyle(color: Colors.white, fontSize: 11,
                       fontWeight: FontWeight.w600)),
             ]),
@@ -57,11 +58,11 @@ class FriendViewScreen extends StatelessWidget {
               Icon(Icons.no_accounts_outlined,
                   size: 80, color: Colors.grey.shade300),
               const SizedBox(height: 16),
-              Text('Aucune donnée disponible',
+              Text('Aucune donnée disponible'.tr,
                   style: AppFonts.title(
                       color: Colors.grey.shade500, size: 16)),
               const SizedBox(height: 6),
-              Text('$friendName n\'a pas encore de données.',
+              Text('{name} n\'a pas encore de données.'.trp({'name': friendName}),
                   style: AppFonts.body(
                       color: Colors.grey.shade400, size: 13)),
             ]));
@@ -77,6 +78,7 @@ class FriendViewScreen extends StatelessWidget {
           final records = snap.data ?? [];
           if (records.isEmpty) return const SizedBox.shrink();
           return FloatingActionButton.extended(
+              heroTag: 'fab_friend_report',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -90,7 +92,7 @@ class FriendViewScreen extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
-            label: const Text('Voir le rapport', style: TextStyle(color: Colors.white)),
+            label: Text('Voir le rapport'.tr, style: TextStyle(color: Colors.white)),
             backgroundColor: AppTheme.primary,
           );
         },
@@ -136,10 +138,10 @@ class _ViewerBodyState extends State<_ViewerBody> {
         glycSpots.add(FlSpot(i.toDouble(), rev[i].averageGlycemieAffichee));
     }
     return Column(children: [
-      _MiniChart(title: 'Doses insuline', spots: doseSpots,
+      _MiniChart(title: 'Doses insuline'.tr, spots: doseSpots,
           color: AppTheme.primary, unit: 'UI', total: rev.length),
       const SizedBox(height: 12),
-      _MiniChart(title: 'Glycémie moyenne', spots: glycSpots,
+      _MiniChart(title: 'Glycémie moyenne'.tr, spots: glycSpots,
           color: AppTheme.secondary, unit: 'Mg/dl', total: rev.length),
     ]);
   }
@@ -195,12 +197,12 @@ class _ViewerBodyState extends State<_ViewerBody> {
                 color: AppTheme.primary, size: 14)),
             const Spacer(),
             if (rec.totalDose > 0) _StatPill(
-                label: 'Doses',
+                label: 'Doses'.tr,
                 value: rec.totalDose.toStringAsFixed(1),
                 unit: 'UI', color: AppTheme.primary),
             const SizedBox(width: 8),
             if (rec.averageGlycemieAffichee > 0) _StatPill(
-                label: 'Glycémie moy.',
+                label: 'Glycémie moy.'.tr,
                 value: rec.averageGlycemieAffichee.toStringAsFixed(1),
                 unit: 'Mg/dl', color: AppTheme.secondary),
           ]),
@@ -211,7 +213,7 @@ class _ViewerBodyState extends State<_ViewerBody> {
           if (rec.entries.where((e) => e.hasGlycemie || e.hasDose).isEmpty)
             Center(child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Aucune mesure ce jour',
+              child: Text('Aucune mesure ce jour'.tr,
                   style: AppFonts.body(
                       color: Colors.grey.shade400, size: 13)),
             )),
@@ -246,7 +248,7 @@ class _MiniChart extends StatelessWidget {
         const SizedBox(height: 10),
         spots.isEmpty
             ? SizedBox(height: 80, child: Center(child: Text(
-            'Pas de données',
+            'Pas de données'.tr,
             style: AppFonts.body(color: Colors.grey.shade400, size: 12))))
             : SizedBox(height: 80, child: LineChart(LineChartData(
           minX: 0,
@@ -314,7 +316,7 @@ class _EntryRow extends StatelessWidget {
            ),
         const SizedBox(width: 10),
         // Nom
-        Expanded(child: Text(entry.name,
+        Expanded(child: Text(entry.name.tr,
             style: AppFonts.body(size: 13),
             overflow: TextOverflow.ellipsis)),
         // Glycémie

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/sahtek_logo.dart';
+import '../l10n/l10n.dart';
 
 const _insulins = [
   'Novorapid (Asparte)',
@@ -72,10 +73,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final age   = int.tryParse(_ageCtrl.text);
     final poids = double.tryParse(_poidsCtrl.text.replaceAll(',', '.'));
     if (age == null || age < 1 || age > 120) {
-      setState(() => _errInfos = 'Âge invalide (1–120)'); return false;
+      setState(() => _errInfos = 'Âge invalide (1–120)'.tr); return false;
     }
     if (poids == null || poids < 20 || poids > 300) {
-      setState(() => _errInfos = 'Poids invalide (20–300 kg)'); return false;
+      setState(() => _errInfos = 'Poids invalide (20–300 kg)'.tr); return false;
     }
     setState(() => _errInfos = null);
     return true;
@@ -117,7 +118,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const SahtekLogo(size: 40, animate: false),
                 const SizedBox(width: 12),
-                Text('Configuration du profil',
+                Text('Configuration du profil'.tr,
                     style: AppFonts.bold(color: AppTheme.primary, size: 18)),
               ]),
               const SizedBox(height: 16),
@@ -140,9 +141,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               const SizedBox(height: 8),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                _StepLabel('Infos', 0, _step),
-                _StepLabel('Diabète', 1, _step),
-                _StepLabel('Traitements', 2, _step),
+                _StepLabel('Infos'.tr, 0, _step),
+                _StepLabel('Diabète'.tr, 1, _step),
+                _StepLabel('Traitements'.tr, 2, _step),
               ]),
             ]),
           ),
@@ -222,10 +223,10 @@ class _PageInfos extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Vos informations personnelles',
+        Text('Vos informations personnelles'.tr,
             style: AppFonts.title(size: 16)),
         const SizedBox(height: 6),
-        Text('Ces données aident à personnaliser votre suivi.',
+        Text('Ces données aident à personnaliser votre suivi.'.tr,
             style: AppFonts.body(color: Colors.grey, size: 13)),
         const SizedBox(height: 24),
 
@@ -234,8 +235,8 @@ class _PageInfos extends StatelessWidget {
           controller: ageCtrl,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            labelText: 'Âge (années)',
+          decoration: InputDecoration(
+            labelText: 'Âge (années)'.tr,
             prefixIcon: Icon(Icons.cake_rounded, size: 18),
           ),
         ),
@@ -246,15 +247,15 @@ class _PageInfos extends StatelessWidget {
           controller: poidsCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))],
-          decoration: const InputDecoration(
-            labelText: 'Poids (kg)',
+          decoration: InputDecoration(
+            labelText: 'Poids (kg)'.tr,
             prefixIcon: Icon(Icons.monitor_weight_rounded, size: 18),
           ),
         ),
         const SizedBox(height: 20),
 
         // Sexe
-        Text('Sexe', style: AppFonts.label(color: Colors.grey.shade600, size: 12)),
+        Text('Sexe'.tr, style: AppFonts.label(color: Colors.grey.shade600, size: 12)),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(4),
@@ -264,9 +265,9 @@ class _PageInfos extends StatelessWidget {
                   blurRadius: 8)]),
           child: Row(children: [
             for (final opt in [
-              ('homme', Icons.male_rounded, 'Homme'),
-              ('femme', Icons.female_rounded, 'Femme'),
-              ('autre', Icons.transgender_rounded, 'Autre'),
+              ('homme', Icons.male_rounded, 'Homme'.tr),
+              ('femme', Icons.female_rounded, 'Femme'.tr),
+              ('autre', Icons.transgender_rounded, 'Autre'.tr),
             ]) Expanded(child: _SexeOption(
               value: opt.$1, icon: opt.$2, label: opt.$3,
               selected: sexe == opt.$1, onTap: () => onSexe(opt.$1),
@@ -296,7 +297,7 @@ class _PageInfos extends StatelessWidget {
           onPressed: onSuivant,
           style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16)),
-          child: const Text('Suivant'),
+          child: Text('Suivant'.tr),
         )),
       ]),
     );
@@ -346,17 +347,17 @@ class _PageTypeDb extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Votre type de diabète',
+        Text('Votre type de diabète'.tr,
             style: AppFonts.title(size: 16)),
         const SizedBox(height: 6),
-        Text('Cela détermine la liste de traitements disponibles.',
+        Text('Cela détermine la liste de traitements disponibles.'.tr,
             style: AppFonts.body(color: Colors.grey, size: 13)),
         const SizedBox(height: 32),
 
         _TypeCard(
           type: 1, selected: selected == 1,
-          title: 'Diabète de type 1',
-          subtitle: 'Insulinodépendant — traitement par injections d\'insuline',
+          title: 'Diabète de type 1'.tr,
+          subtitle: 'Insulinodépendant — traitement par injections d\'insuline'.tr,
           icon: Icons.medication_liquid_rounded,
           color: AppTheme.primary,
           onTap: () => onSelected(1),
@@ -364,8 +365,8 @@ class _PageTypeDb extends StatelessWidget {
         const SizedBox(height: 16),
         _TypeCard(
           type: 2, selected: selected == 2,
-          title: 'Diabète de type 2',
-          subtitle: 'Non-insulinodépendant — traitement par comprimés / injections',
+          title: 'Diabète de type 2'.tr,
+          subtitle: 'Non-insulinodépendant — traitement par comprimés / injections'.tr,
           icon: Icons.medication_rounded,
           color: AppTheme.secondary,
           onTap: () => onSelected(2),
@@ -375,7 +376,7 @@ class _PageTypeDb extends StatelessWidget {
         TextButton.icon(
           onPressed: onRetour,
           icon: const Icon(Icons.arrow_back_rounded, size: 16),
-          label: const Text('Retour'),
+          label: Text('Retour'.tr),
         ),
       ]),
     );
@@ -415,7 +416,7 @@ class _TypeCard extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Type $type', style: AppFonts.label(color: color, size: 11)
+          Text('Type {n}'.trp({'n': type}), style: AppFonts.label(color: color, size: 11)
               .copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(title, style: AppFonts.title(size: 14)),
@@ -446,8 +447,13 @@ class _PageMedicaments extends StatelessWidget {
   });
 
   List<String> get _liste => typeDb == 1 ? _insulins : _pills;
-  String get _titre => typeDb == 1 ? 'Insulines' : 'Médicaments (comprimés)';
-  String get _label => typeDb == 1 ? 'insuline' : 'médicament';
+  String get _titre => typeDb == 1 ? 'Insulines'.tr : 'Médicaments (comprimés)'.tr;
+  String get _ajouter => typeDb == 1
+      ? 'Ajouter une insuline'.tr : 'Ajouter un médicament'.tr;
+  String get _nom => typeDb == 1
+      ? 'Nom de l\'insuline'.tr : 'Nom du médicament'.tr;
+  String get _ajouterAutre => typeDb == 1
+      ? 'Ajouter une autre insuline'.tr : 'Ajouter un autre médicament'.tr;
 
   Future<void> _ajouterCustom(BuildContext context) async {
     final ctrl = TextEditingController();
@@ -455,24 +461,24 @@ class _PageMedicaments extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Ajouter une $_label', style: AppFonts.title(size: 15)),
+        title: Text(_ajouter, style: AppFonts.title(size: 15)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           decoration: InputDecoration(
-              labelText: 'Nom de la $_label',
+              labelText: _nom,
               prefixIcon: const Icon(Icons.add_rounded, size: 18)),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler')),
+              child: Text('Annuler'.tr)),
           ElevatedButton(
             onPressed: () {
               if (ctrl.text.trim().isNotEmpty) {
                 Navigator.pop(context, ctrl.text.trim());
               }
             },
-            child: const Text('Ajouter'),
+            child: Text('Ajouter'.tr),
           ),
         ],
       ),
@@ -488,7 +494,7 @@ class _PageMedicaments extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(_titre, style: AppFonts.title(size: 16)),
           const SizedBox(height: 4),
-          Text('Sélectionnez vos traitements actuels (optionnel).',
+          Text('Sélectionnez vos traitements actuels (optionnel).'.tr,
               style: AppFonts.body(color: Colors.grey, size: 13)),
         ]),
       ),
@@ -509,7 +515,7 @@ class _PageMedicaments extends StatelessWidget {
           // Médicaments personnalisés ajoutés
           if (custom.isNotEmpty) ...[
             const Divider(height: 24),
-            Text('Ajoutés manuellement',
+            Text('Ajoutés manuellement'.tr,
                 style: AppFonts.label(color: Colors.grey, size: 11)),
             const SizedBox(height: 8),
             ...custom.map((m) => ListTile(
@@ -531,7 +537,7 @@ class _PageMedicaments extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => _ajouterCustom(context),
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: Text('Ajouter une autre $_label'),
+            label: Text(_ajouterAutre),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primary,
               side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.4)),
@@ -546,7 +552,7 @@ class _PageMedicaments extends StatelessWidget {
           TextButton.icon(
             onPressed: onRetour,
             icon: const Icon(Icons.arrow_back_rounded, size: 16),
-            label: const Text('Retour'),
+            label: Text('Retour'.tr),
           ),
           const SizedBox(width: 12),
           Expanded(child: ElevatedButton(
@@ -557,7 +563,7 @@ class _PageMedicaments extends StatelessWidget {
                 ? const SizedBox(width: 20, height: 20,
                     child: CircularProgressIndicator(
                         color: Colors.white, strokeWidth: 2))
-                : const Text('Terminer la configuration'),
+                : Text('Terminer la configuration'.tr),
           )),
         ]),
       ),

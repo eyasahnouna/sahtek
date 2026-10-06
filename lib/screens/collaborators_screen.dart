@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../screens/friend_view_screen.dart';
+import '../screens/settings_screen.dart';
 import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 class CollaboratorsScreen extends StatelessWidget {
   final bool isDoctor;
@@ -12,21 +14,21 @@ class CollaboratorsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!FirebaseService.instance.isLoggedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Accès partagé')),
+        appBar: AppBar(title: Text('Accès partagé'.tr)),
         body: Center(child: Column(
           mainAxisAlignment: MainAxisAlignment.center, children: [
           const Icon(Icons.lock_rounded, size: 64, color: AppTheme.primary),
           const SizedBox(height: 16),
-          Text('Connexion requise', style: AppFonts.title(size: 18)),
+          Text('Connexion requise'.tr, style: AppFonts.title(size: 18)),
           const SizedBox(height: 8),
-          Text('Connectez-vous pour partager\nvos données.',
+          Text('Connectez-vous pour partager\nvos données.'.tr,
               style: AppFonts.body(color: Colors.grey, size: 14),
               textAlign: TextAlign.center),
           const SizedBox(height: 24),
           ElevatedButton.icon(
               onPressed: () => Navigator.pushNamed(context, '/auth'),
               icon: const Icon(Icons.login_rounded),
-              label: const Text('Se connecter / S\'inscrire')),
+              label: Text('Se connecter / S\'inscrire'.tr)),
         ])),
       );
     }
@@ -35,21 +37,22 @@ class CollaboratorsScreen extends StatelessWidget {
     if (isDoctor) {
       return DefaultTabController(length: 2, child: Scaffold(
         appBar: AppBar(
-          title: const Text('Mes patients'),
+          title: Text('Mes patients'.tr),
           actions: [
+            const SettingsIconButton(),
             IconButton(
               icon: const Icon(Icons.logout_rounded, color: Colors.white),
-              tooltip: 'Déconnexion',
+              tooltip: 'Déconnexion'.tr,
               onPressed: () => _confirmLogout(context),
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             indicatorColor: Colors.white,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white54,
             tabs: [
-              Tab(icon: Icon(Icons.medical_services_rounded, size: 16), text: 'Mes patients'),
-              Tab(icon: Icon(Icons.mail_rounded, size: 16), text: 'Invitations'),
+              Tab(icon: Icon(Icons.medical_services_rounded, size: 16), text: 'Mes patients'.tr),
+              Tab(icon: Icon(Icons.mail_rounded, size: 16), text: 'Invitations'.tr),
             ],
           ),
         ),
@@ -63,29 +66,31 @@ class CollaboratorsScreen extends StatelessWidget {
     // Mode patient : 2 onglets + FAB inviter son médecin
     return DefaultTabController(length: 2, child: Scaffold(
       appBar: AppBar(
-        title: const Text('Mon médecin'),
+        title: Text('Mon médecin'.tr),
         actions: [
+          const SettingsIconButton(),
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
-            tooltip: 'Déconnexion',
+            tooltip: 'Déconnexion'.tr,
             onPressed: () => _confirmLogout(context),
           ),
         ],
-        bottom: const TabBar(
+        bottom: TabBar(
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white54,
           tabs: [
-            Tab(icon: Icon(Icons.medical_services_rounded, size: 16), text: 'Mes médecins'),
-            Tab(icon: Icon(Icons.mail_rounded, size: 16), text: 'Invitations'),
+            Tab(icon: Icon(Icons.medical_services_rounded, size: 16), text: 'Mes médecins'.tr),
+            Tab(icon: Icon(Icons.mail_rounded, size: 16), text: 'Invitations'.tr),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+              heroTag: 'fab_invite_doctor',
         onPressed: () => _showInviteDialog(context),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-        label: Text('Inviter mon médecin', style: AppFonts.label(color: Colors.white, size: 13)
+        label: Text('Inviter mon médecin'.tr, style: AppFonts.label(color: Colors.white, size: 13)
             .copyWith(fontWeight: FontWeight.w600)),
       ),
       body: const TabBarView(children: [
@@ -100,18 +105,18 @@ class CollaboratorsScreen extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Déconnexion', style: AppFonts.title(size: 16)),
-        content: Text('Voulez-vous vous déconnecter ?',
+        title: Text('Déconnexion'.tr, style: AppFonts.title(size: 16)),
+        content: Text('Voulez-vous vous déconnecter ?'.tr,
             style: AppFonts.body(size: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
+            child: Text('Annuler'.tr),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Déconnecter'),
+            child: Text('Déconnecter'.tr),
           ),
         ],
       ),
@@ -136,7 +141,7 @@ class CollaboratorsScreen extends StatelessWidget {
               child: const Icon(Icons.person_add_rounded,
                   color: AppTheme.primary, size: 20)),
           const SizedBox(width: 10),
-          Expanded(child: Text('Inviter mon médecin', style: AppFonts.title(size: 15))),
+          Expanded(child: Text('Inviter mon médecin'.tr, style: AppFonts.title(size: 15))),
         ]),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
@@ -150,7 +155,7 @@ class CollaboratorsScreen extends StatelessWidget {
                   color: AppTheme.primary, size: 16),
               const SizedBox(width: 8),
               Expanded(child: Text(
-                'Votre médecin devra ouvrir Sahtek avec ce compte email pour accepter l\'invitation.',
+                'Votre médecin devra ouvrir Sahtek avec ce compte email pour accepter l\'invitation.'.tr,
                 style: AppFonts.label(color: AppTheme.primary, size: 12),
               )),
             ]),
@@ -164,7 +169,7 @@ class CollaboratorsScreen extends StatelessWidget {
               if (error != null) set(() => error = null);
             },
             decoration: InputDecoration(
-                labelText: 'Email du médecin',
+                labelText: 'Email du médecin'.tr,
                 hintText: 'exemple@mail.com',
                 prefixIcon: const Icon(Icons.email_rounded, size: 18),
                 errorText: error,
@@ -177,16 +182,16 @@ class CollaboratorsScreen extends StatelessWidget {
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text('Annuler', style: AppFonts.body(color: Colors.grey))),
+              child: Text('Annuler'.tr, style: AppFonts.body(color: Colors.grey))),
           ElevatedButton(
             onPressed: sending ? null : () async {
               final email = emailCtrl.text.trim().toLowerCase();
               final emailRegex = RegExp(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$');
               if (email.isEmpty) {
-                set(() => error = 'Entrez un email'); return;
+                set(() => error = 'Entrez un email'.tr); return;
               }
               if (!emailRegex.hasMatch(email)) {
-                set(() => error = 'Email invalide'); return;
+                set(() => error = 'Email invalide'.tr); return;
               }
               set(() { sending = true; error = null; });
               try {
@@ -199,7 +204,7 @@ class CollaboratorsScreen extends StatelessWidget {
                       const Icon(Icons.check_circle_rounded,
                           color: Colors.white, size: 18),
                       const SizedBox(width: 8),
-                      Expanded(child: Text('Invitation envoyée à $email')),
+                      Expanded(child: Text('Invitation envoyée à {email}'.trp({'email': email}))),
                     ]),
                     backgroundColor: AppTheme.success,
                     duration: const Duration(seconds: 4),
@@ -208,7 +213,7 @@ class CollaboratorsScreen extends StatelessWidget {
               } catch (e) {
                 set(() {
                   sending = false;
-                  error = e.toString().replaceAll('Exception: ', '');
+                  error = e.toString().replaceAll('Exception: ', '').tr;
                 });
               }
             },
@@ -216,7 +221,7 @@ class CollaboratorsScreen extends StatelessWidget {
                 ? const SizedBox(width: 18, height: 18,
                     child: CircularProgressIndicator(
                         color: Colors.white, strokeWidth: 2))
-                : const Text('Envoyer l\'invitation'),
+                : Text('Envoyer l\'invitation'.tr),
           ),
         ],
       ),
@@ -243,11 +248,11 @@ class _MyPatientsTab extends StatelessWidget {
             Icon(Icons.medical_services_outlined, size: 70,
                 color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            Text('Aucun patient', style: AppFonts.title(
+            Text('Aucun patient'.tr, style: AppFonts.title(
                 color: Colors.grey.shade400, size: 16)),
             const SizedBox(height: 8),
             Text(
-              'Quand un patient vous invite et que\nvous acceptez, il apparaîtra ici.',
+              'Quand un patient vous invite et que\nvous acceptez, il apparaîtra ici.'.tr,
               style: AppFonts.body(color: Colors.grey.shade400, size: 13),
               textAlign: TextAlign.center,
             ),
@@ -349,10 +354,10 @@ class _MyCollaboratorsTab extends StatelessWidget {
             Icon(Icons.people_outline_rounded, size: 70,
                 color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            Text('Aucun médecin', style: AppFonts.title(
+            Text('Aucun médecin'.tr, style: AppFonts.title(
                 color: Colors.grey.shade400, size: 16)),
             const SizedBox(height: 8),
-            Text('Appuyez sur "Inviter mon médecin" pour\npartager vos données.',
+            Text('Appuyez sur "Inviter mon médecin" pour\npartager vos données.'.tr,
                 style: AppFonts.body(color: Colors.grey.shade400, size: 13),
                 textAlign: TextAlign.center),
           ]));
@@ -423,18 +428,18 @@ class _CollaboratorCard extends StatelessWidget {
           onPressed: () async {
             final ok = await showDialog<bool>(context: context,
               builder: (_) => AlertDialog(
-                title: Text('Retirer l\'accès ?',
+                title: Text('Retirer l\'accès ?'.tr,
                     style: AppFonts.title(size: 15)),
-                content: Text('${c.email} ne pourra plus accéder à vos données.',
+                content: Text('{email} ne pourra plus accéder à vos données.'.trp({'email': c.email}),
                     style: AppFonts.body(size: 13)),
                 actions: [
                   TextButton(onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Annuler')),
+                      child: Text('Annuler'.tr)),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.danger),
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Retirer'),
+                    child: Text('Retirer'.tr),
                   ),
                 ],
               ),
@@ -468,10 +473,10 @@ class _InvitationsTab extends StatelessWidget {
             Icon(Icons.mail_outline_rounded, size: 70,
                 color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            Text('Aucune invitation', style: AppFonts.title(
+            Text('Aucune invitation'.tr, style: AppFonts.title(
                 color: Colors.grey.shade400, size: 16)),
             const SizedBox(height: 8),
-            Text('Vos invitations apparaîtront ici.',
+            Text('Vos invitations apparaîtront ici.'.tr,
                 style: AppFonts.body(color: Colors.grey.shade400, size: 13)),
           ]));
         }
@@ -493,8 +498,8 @@ class _InvitationCard extends StatelessWidget {
   Future<void> _acceptAndChangePassword(BuildContext context) async {
     await FirebaseService.instance.acceptInvitation(inv.id);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Accès accepté !'),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Accès accepté !'.tr),
       backgroundColor: AppTheme.success,
     ));
     await showDialog(
@@ -517,14 +522,15 @@ class _InvitationCard extends StatelessWidget {
         Row(children: [
           const Icon(Icons.mail_rounded, color: AppTheme.warning, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text('Invitation Sahtek',
+          Expanded(child: Text('Invitation Sahtek'.tr,
               style: AppFonts.label(color: AppTheme.warning, size: 12)
                   .copyWith(fontWeight: FontWeight.w700),
               overflow: TextOverflow.ellipsis)),
         ]),
         const SizedBox(height: 8),
         Text(
-          'Le patient ${inv.ownerEmail} vous invite à consulter ses données médicales.',
+          'Le patient {email} vous invite à consulter ses données médicales.'
+              .trp({'email': inv.ownerEmail}),
           style: AppFonts.body(size: 13),
         ),
         const SizedBox(height: 4),
@@ -533,7 +539,7 @@ class _InvitationCard extends StatelessWidget {
           decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20)),
-          child: Text('Rôle : ${inv.roleLabel}',
+          child: Text('Rôle : {role}'.trp({'role': inv.roleLabel}),
               style: AppFonts.label(color: AppTheme.primary, size: 11)
                   .copyWith(fontWeight: FontWeight.w600)),
         ),
@@ -546,12 +552,12 @@ class _InvitationCard extends StatelessWidget {
             style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.danger),
                 foregroundColor: AppTheme.danger),
-            child: const Text('Refuser'),
+            child: Text('Refuser'.tr),
           )),
           const SizedBox(width: 10),
           Expanded(child: ElevatedButton(
             onPressed: () => _acceptAndChangePassword(context),
-            child: const Text('Accepter'),
+            child: Text('Accepter'.tr),
           )),
         ]),
       ]),
@@ -583,10 +589,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
   Future<void> _submit() async {
     final newPass = _newCtrl.text;
     if (newPass.length < 6) {
-      setState(() => _error = 'Minimum 6 caractères'); return;
+      setState(() => _error = 'Minimum 6 caractères'.tr); return;
     }
     if (newPass != _confCtrl.text) {
-      setState(() => _error = 'Les mots de passe ne correspondent pas'); return;
+      setState(() => _error = 'Les mots de passe ne correspondent pas'.tr); return;
     }
     setState(() { _loading = true; _error = null; });
     try {
@@ -596,8 +602,8 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       setState(() {
         _loading = false;
         _error = e.code == 'requires-recent-login'
-            ? 'Reconnectez-vous puis réessayez.'
-            : e.message ?? 'Erreur inconnue';
+            ? 'Reconnectez-vous puis réessayez.'.tr
+            : e.message ?? 'Erreur inconnue'.tr;
       });
     }
   }
@@ -616,7 +622,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               color: AppTheme.primary, size: 20),
         ),
         const SizedBox(width: 10),
-        Expanded(child: Text('Modifier le mot de passe',
+        Expanded(child: Text('Modifier le mot de passe'.tr,
             style: AppFonts.title(size: 14))),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -631,7 +637,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                 color: AppTheme.primary, size: 14),
             const SizedBox(width: 8),
             Expanded(child: Text(
-              'Définissez un mot de passe personnel pour sécuriser votre compte.',
+              'Définissez un mot de passe personnel pour sécuriser votre compte.'.tr,
               style: AppFonts.label(color: AppTheme.primary, size: 11),
             )),
           ]),
@@ -641,7 +647,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
           controller: _newCtrl,
           obscureText: !_showPass,
           decoration: InputDecoration(
-            labelText: 'Nouveau mot de passe',
+            labelText: 'Nouveau mot de passe'.tr,
             prefixIcon: const Icon(Icons.lock_rounded, size: 18),
             suffixIcon: IconButton(
               icon: Icon(_showPass
@@ -656,7 +662,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
           controller: _confCtrl,
           obscureText: !_showPass,
           decoration: InputDecoration(
-            labelText: 'Confirmer le mot de passe',
+            labelText: 'Confirmer le mot de passe'.tr,
             prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18),
             errorText: _error,
           ),
@@ -666,7 +672,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Passer', style: AppFonts.body(color: Colors.grey)),
+          child: Text('Passer'.tr, style: AppFonts.body(color: Colors.grey)),
         ),
         ElevatedButton(
           onPressed: _loading ? null : _submit,
@@ -674,7 +680,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               ? const SizedBox(width: 18, height: 18,
                   child: CircularProgressIndicator(
                       color: Colors.white, strokeWidth: 2))
-              : const Text('Modifier'),
+              : Text('Modifier'.tr),
         ),
       ],
     );

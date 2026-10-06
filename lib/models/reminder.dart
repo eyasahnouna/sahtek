@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import '../l10n/l10n.dart';
 
 enum ReminderType {
   fastingGlucose,   // Glycémie à jeun (défaut 07:30)
@@ -13,12 +14,12 @@ enum ReminderType {
 extension ReminderTypeX on ReminderType {
   String get label {
     switch (this) {
-      case ReminderType.fastingGlucose: return 'Glycémie à jeun';
-      case ReminderType.afterBreakfast: return '2h après petit déjeuner';
-      case ReminderType.beforeLunch:    return 'Avant déjeuner';
-      case ReminderType.beforeDinner:   return 'Avant dîner';
-      case ReminderType.insulin:        return 'Dose d\'insuline';
-      case ReminderType.custom:         return 'Personnalisé';
+      case ReminderType.fastingGlucose: return 'Glycémie à jeun'.tr;
+      case ReminderType.afterBreakfast: return '2h après petit déjeuner'.tr;
+      case ReminderType.beforeLunch:    return 'Avant déjeuner'.tr;
+      case ReminderType.beforeDinner:   return 'Avant dîner'.tr;
+      case ReminderType.insulin:        return 'Dose d\'insuline'.tr;
+      case ReminderType.custom:         return 'Personnalisé'.tr;
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'utils/app_theme.dart';
 import 'widgets/sahtek_logo.dart';
+import 'l10n/l10n.dart';
 
 // ignore_for_file: unused_import
 
@@ -61,6 +63,9 @@ Future<void> main() async {
   tz.initializeTimeZones();
   tz.setLocalLocation(_resolveLocalTimezone());
   await initializeDateFormatting('fr_FR', null);
+  await initializeDateFormatting('ar', null);
+  final localeProvider = LocaleProvider();
+  await localeProvider.load();
   await NotificationService.instance.init();
 
   await Firebase.initializeApp(
@@ -70,6 +75,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => ReminderProvider()),
       ],
@@ -83,15 +89,24 @@ class SahtekApp extends StatelessWidget {
   const SahtekApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'Sahtek',
-    debugShowCheckedModeBanner: false,
-    theme: AppTheme.theme,
-    home: const _AuthGate(),
-    routes: {
-      '/auth': (context) => const AuthScreen(),
-    },
-  );
+  Widget build(BuildContext context) {
+    final locale = context.watch<LocaleProvider>().locale;
+    return MaterialApp(
+      // Changer de langue recrée toute l'arborescence : les widgets `const`
+      // ne se reconstruiraient pas autrement et garderaient l'ancien texte.
+      key: ValueKey(locale.languageCode),
+      title: 'Sahtek',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.theme,
+      locale: locale,
+      supportedLocales: L10n.supportedLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: const _AuthGate(),
+      routes: {
+        '/auth': (context) => const AuthScreen(),
+      },
+    );
+  }
 }
 
 // ── Splash animé ─────────────────────────────────────────────────────────────
@@ -202,7 +217,7 @@ class _SplashScreenState extends State<_SplashScreen>
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Votre santé, sécurisée',
+                          'Votre santé, sécurisée'.tr,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.80),
                             fontSize: 15,
@@ -495,7 +510,7 @@ class _NavBarItemState extends State<_NavBarItem>
                     ? AppTheme.primary
                     : const Color(0xFFB0C4CE),
               ),
-              child: Text(widget.item.label),
+              child: Text(widget.item.label.tr),
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 /// Logo officiel Sahtek.
 /// [size]    — côté du carré arrondi (défaut 80)
@@ -128,7 +129,7 @@ class _SahtekLogoState extends State<SahtekLogo>
           ),
           const SizedBox(height: 4),
           Text(
-            'Votre santé, sécurisée',
+            'Votre santé, sécurisée'.tr,
             style: AppFonts.body(color: Colors.grey.shade500, size: 14),
           ),
         ],

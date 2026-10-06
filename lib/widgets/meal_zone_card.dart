@@ -6,6 +6,7 @@ import '../utils/app_theme.dart';
 import 'dose_badge.dart';
 import 'metric_input_field.dart';
 import 'time_picker_tile.dart';
+import '../l10n/l10n.dart';
 
 class MealZoneCard extends StatefulWidget {
   final MealEntry entry;
@@ -119,7 +120,7 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              entry.name,
+              entry.name.tr,
               style: AppFonts.title(color: Colors.white, size: 15),
             ),
           ),
@@ -205,12 +206,12 @@ class _Body extends StatelessWidget {
         // ── Horaires ────────────────────────────────────────────
         Row(children: [
           Expanded(child: TimePickerTile(
-              label: 'Heure dose', time: entry.doseTime,
+              label: 'Heure dose'.tr, time: entry.doseTime,
               icon: Icons.medication_rounded, color: accent,
               onChanged: (t) => onUpdate(entry.copyWith(doseTime: t)))),
           const SizedBox(width: 10),
           Expanded(child: TimePickerTile(
-              label: 'Heure repas', time: entry.mealTime,
+              label: 'Heure repas'.tr, time: entry.mealTime,
               icon: Icons.restaurant_rounded, color: accent,
               onChanged: (t) => onUpdate(entry.copyWith(mealTime: t)))),
         ]),
@@ -228,7 +229,7 @@ class _Body extends StatelessWidget {
         Row(children: [
           Expanded(child: MetricInputField(
               key: ValueKey('glycemie_${entry.id}_${entry.glycemie}'),
-              label: 'Mesure glycémie',
+              label: 'Mesure glycémie'.tr,
               unit:  'Mg/dl',
               value: entry.glycemie,
               icon: Icons.bloodtype_rounded, accentColor: accent,
@@ -236,7 +237,7 @@ class _Body extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: MetricInputField(
               key: ValueKey('dose_${entry.id}_${entry.dose}'),
-              label: 'Dose insuline', unit: 'UI',
+              label: 'Dose insuline'.tr, unit: 'UI',
               value: entry.dose,
               icon: Icons.medication_liquid_rounded, accentColor: accent,
               onChanged: (v) => onUpdate(entry.copyWith(dose: v)))),
@@ -261,7 +262,7 @@ class _Body extends StatelessWidget {
         const SizedBox(height: 14),
 
         // ── Section observation ──────────────────────────────────
-        _SectionLabel(label: 'Observation', color: accent),
+        _SectionLabel(label: 'Observation'.tr, color: accent),
         const SizedBox(height: 8),
         _ObservationField(
           key: ValueKey('obs_${entry.id}'),
@@ -276,11 +277,11 @@ class _Body extends StatelessWidget {
 
         // ── Actions ──────────────────────────────────────────────
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          _ActionBtn(icon: Icons.delete_sweep_rounded, label: 'Effacer',
+          _ActionBtn(icon: Icons.delete_sweep_rounded, label: 'Effacer'.tr,
               color: Colors.grey, onTap: onClear),
           const SizedBox(width: 6),
           _ActionBtn(icon: Icons.add_circle_outline_rounded,
-              label: 'Ajouter Snack',
+              label: 'Ajouter Snack'.tr,
               color: AppTheme.snackColor, onTap: onAddSnack),
         ]),
       ]),
@@ -388,7 +389,7 @@ class _ObservationFieldState extends State<_ObservationField> {
       textInputAction: TextInputAction.newline,
       style: AppFonts.body(size: 13),
       decoration: InputDecoration(
-        hintText: 'Ex : hypoglycémie légère, repas copieux, sport…',
+        hintText: 'Ex : hypoglycémie légère, repas copieux, sport…'.tr,
         hintStyle: AppFonts.body(color: Colors.grey.shade400, size: 12),
         prefixIcon: Padding(
           padding: const EdgeInsets.only(left: 12, right: 8, top: 10),
@@ -446,8 +447,8 @@ class _GlycemieModeToggle extends StatelessWidget {
                   Flexible(
                     child: Text(
                       m == GlycemieMode.directe
-                          ? 'Valeur directe'
-                          : 'Convertie (×0.18)',
+                          ? 'Valeur directe'.tr
+                          : 'Convertie (×0.18)'.tr,
                       style: AppFonts.label(
                         color: selected ? Colors.white : accent.withOpacity(0.7),
                         size: 11,
@@ -498,7 +499,7 @@ class _SensorBody extends StatelessWidget {
         // Champ glycémie uniquement
         MetricInputField(
           key: ValueKey('glycemie_${entry.id}_${entry.glycemie}'),
-          label: 'Glycémie mesurée',
+          label: 'Glycémie mesurée'.tr,
           unit: 'Mg/dl',
           value: entry.glycemie,
           icon: Icons.sensors_rounded,
@@ -520,7 +521,7 @@ class _SensorBody extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Observation
-        _SectionLabel(label: 'Note', color: accent),
+        _SectionLabel(label: 'Note'.tr, color: accent),
         const SizedBox(height: 6),
         _ObservationField(
           key: ValueKey('obs_${entry.id}'),
@@ -540,7 +541,7 @@ class _SensorBody extends StatelessWidget {
             onPressed: onClear,
             icon: Icon(Icons.delete_sweep_rounded,
                 size: 15, color: Colors.grey.shade400),
-            label: Text('Effacer',
+            label: Text('Effacer'.tr,
                 style: AppFonts.label(
                     color: Colors.grey.shade400, size: 12)),
             style: TextButton.styleFrom(

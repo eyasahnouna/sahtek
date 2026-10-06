@@ -8,6 +8,10 @@
 	<string>Sahtek accède à vos photos pour joindre une image de repas à votre journal.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Sahtek peut enregistrer des photos dans votre galerie.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sahtek utilise le micro pour dicter vos mesures de glycémie et vos doses d'insuline.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Sahtek transcrit votre voix pour remplir automatiquement votre journal.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

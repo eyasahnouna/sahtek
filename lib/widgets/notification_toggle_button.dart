@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 class NotificationToggleButton extends StatelessWidget {
   final bool enabled;
@@ -32,7 +33,7 @@ class NotificationToggleButton extends StatelessWidget {
                   key: ValueKey(enabled), color: Colors.white, size: 16),
             ),
             const SizedBox(width: 5),
-            Text(enabled ? 'Notif ON' : 'Notif OFF',
+            Text(enabled ? 'Notif ON'.tr : 'Notif OFF'.tr,
                 style: AppFonts.label(color: Colors.white, size: 11)
                     .copyWith(fontWeight: FontWeight.w600)),
           ]),

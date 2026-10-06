@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../models/reminder.dart';
 import '../models/meal_entry.dart';
+import '../l10n/l10n.dart';
 
 class NotificationService {
   NotificationService._();
@@ -57,7 +58,7 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       reminder.id.hashCode & 0x7FFFFFFF,
-      'Sahtek — ${reminder.displayLabel}',
+      '${'Sahtek'.tr} — ${reminder.displayLabel}',
       _reminderBody(reminder),
       tz.TZDateTime.from(scheduled, tz.local),
       NotificationDetails(
@@ -83,8 +84,8 @@ importance: Importance.high, priority: Priority.high,
     if (entry.doseTime == null) return;
     await _scheduleAtTime(
       id:    entry.id.hashCode & 0x7FFFFFFF,
-      title: 'Sahtek — ${entry.name}',
-      body:  'Rappel : dose prévue pour ${entry.name}',
+      title: '${'Sahtek'.tr} — ${entry.name.tr}',
+      body:  'Rappel : dose prévue pour {name}'.trp({'name': entry.name.tr}),
       time:  entry.doseTime!,
     );
   }
@@ -109,8 +110,8 @@ importance: Importance.high, priority: Priority.high,
     await _plugin.cancel(id);
     await _plugin.zonedSchedule(
       id,
-      'Sahtek — Mesure glycémie',
-      'Mesurez votre glycémie 2h après $mealName',
+      'Sahtek — Mesure glycémie'.tr,
+      'Mesurez votre glycémie 2h après {meal}'.trp({'meal': mealName.tr}),
       tz.TZDateTime.from(scheduled, tz.local),
       NotificationDetails(
         android: const AndroidNotificationDetails(
@@ -143,8 +144,8 @@ importance: Importance.high, priority: Priority.high,
     await _plugin.cancel(_idPostInsulin);
     await _plugin.zonedSchedule(
       _idPostInsulin,
-      'Sahtek — Mesure glycémie',
-      'Mesurez votre glycémie — 2h après votre dose d\'insuline',
+      'Sahtek — Mesure glycémie'.tr,
+      'Mesurez votre glycémie — 2h après votre dose d\'insuline'.tr,
       tz.TZDateTime.from(checkAt, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -170,8 +171,8 @@ importance: Importance.high,
     await _plugin.cancel(_idHypoRecheck);
     await _plugin.zonedSchedule(
       _idHypoRecheck,
-      'Sahtek ⚠️ Hypoglycémie',
-      'Refaites votre mesure — 15 min après votre hypoglycémie',
+      'Sahtek ⚠️ Hypoglycémie'.tr,
+      'Refaites votre mesure — 15 min après votre hypoglycémie'.tr,
       tz.TZDateTime.from(recheckAt, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -201,16 +202,16 @@ importance: Importance.max,
     final ids     = [_idHyperWater1, _idHyperWater2, _idHyperWater3];
     final delays  = [30, 60, 90];      // minutes après la mesure
     final bodies  = [
-      'Buvez un verre d\'eau — votre glycémie est élevée',
-      'Rappel hydratation — buvez encore un verre d\'eau',
-      'Dernier rappel — pensez à bien vous hydrater',
+      'Buvez un verre d\'eau — votre glycémie est élevée'.tr,
+      'Rappel hydratation — buvez encore un verre d\'eau'.tr,
+      'Dernier rappel — pensez à bien vous hydrater'.tr,
     ];
 
     for (var i = 0; i < 3; i++) {
       final fireAt = now.add(Duration(minutes: delays[i]));
       await _plugin.zonedSchedule(
         ids[i],
-        'Sahtek 💧 Hydratation',
+        'Sahtek 💧 Hydratation'.tr,
         bodies[i],
         tz.TZDateTime.from(fireAt, tz.local),
         const NotificationDetails(
@@ -277,12 +278,12 @@ importance: Importance.high, priority: Priority.high,
 
   String _reminderBody(Reminder r) {
     switch (r.type) {
-      case ReminderType.fastingGlucose: return 'Mesurez votre glycémie à jeun';
-      case ReminderType.afterBreakfast: return 'Glycémie 2h après le petit déjeuner';
-      case ReminderType.beforeLunch:    return 'Glycémie avant le déjeuner';
-      case ReminderType.beforeDinner:   return 'Glycémie avant le dîner';
-      case ReminderType.insulin:        return 'Heure de votre dose d\'insuline';
-      case ReminderType.custom:         return r.customLabel ?? 'Rappel';
+      case ReminderType.fastingGlucose: return 'Mesurez votre glycémie à jeun'.tr;
+      case ReminderType.afterBreakfast: return 'Glycémie 2h après le petit déjeuner'.tr;
+      case ReminderType.beforeLunch:    return 'Glycémie avant le déjeuner'.tr;
+      case ReminderType.beforeDinner:   return 'Glycémie avant le dîner'.tr;
+      case ReminderType.insulin:        return 'Heure de votre dose d\'insuline'.tr;
+      case ReminderType.custom:         return r.customLabel ?? 'Rappel'.tr;
     }
   }
 

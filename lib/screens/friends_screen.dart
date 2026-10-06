@@ -3,6 +3,7 @@ import '../services/firebase_service.dart';
 import '../utils/app_theme.dart';
 import 'auth_screen.dart';
 import 'friend_view_screen.dart';
+import '../l10n/l10n.dart';
 
 /// Écran de gestion des collaborateurs (visiteurs lecture seule)
 class FriendsScreen extends StatelessWidget {
@@ -13,7 +14,7 @@ class FriendsScreen extends StatelessWidget {
     // Non connecté → proposer la connexion
     if (!FirebaseService.instance.isLoggedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Partage de données')),
+        appBar: AppBar(title: Text('Partage de données'.tr)),
         body: Center(child: Column(
             mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(padding: const EdgeInsets.all(20),
@@ -23,9 +24,9 @@ class FriendsScreen extends StatelessWidget {
               child: const Icon(Icons.lock_rounded,
                   size: 48, color: AppTheme.primary)),
           const SizedBox(height: 20),
-          Text('Connexion requise', style: AppFonts.title(size: 18)),
+          Text('Connexion requise'.tr, style: AppFonts.title(size: 18)),
           const SizedBox(height: 8),
-          Text('Connectez-vous pour inviter\ndes visiteurs à voir vos données.',
+          Text('Connectez-vous pour inviter\ndes visiteurs à voir vos données.'.tr,
               style: AppFonts.body(color: Colors.grey, size: 14),
               textAlign: TextAlign.center),
           const SizedBox(height: 28),
@@ -33,7 +34,7 @@ class FriendsScreen extends StatelessWidget {
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const AuthScreen())),
             icon: const Icon(Icons.login_rounded),
-            label: const Text('Se connecter / S\'inscrire'),
+            label: Text('Se connecter / S\'inscrire'.tr),
           ),
         ])),
       );
@@ -41,32 +42,33 @@ class FriendsScreen extends StatelessWidget {
 
     return DefaultTabController(length: 2, child: Scaffold(
       appBar: AppBar(
-        title: const Text('Partage de données'),
+        title: Text('Partage de données'.tr),
         actions: [
           // Bouton déconnexion
           IconButton(
             icon: const Icon(Icons.logout_rounded, size: 20),
-            tooltip: 'Se déconnecter',
+            tooltip: 'Se déconnecter'.tr,
             onPressed: () async => FirebaseService.instance.signOut(),
           ),
         ],
-        bottom: const TabBar(
+        bottom: TabBar(
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white54,
           tabs: [
             Tab(icon: Icon(Icons.people_rounded, size: 16),
-                text: 'Mes visiteurs'),
+                text: 'Mes visiteurs'.tr),
             Tab(icon: Icon(Icons.mail_rounded, size: 16),
-                text: 'Invitations reçues'),
+                text: 'Invitations reçues'.tr),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+              heroTag: 'fab_invite_visitor',
         onPressed: () => _showInviteDialog(context),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-        label: Text('Inviter un visiteur',
+        label: Text('Inviter un visiteur'.tr,
             style: AppFonts.label(color: Colors.white, size: 13)
                 .copyWith(fontWeight: FontWeight.w600)),
       ),
@@ -93,7 +95,7 @@ class FriendsScreen extends StatelessWidget {
               child: const Icon(Icons.person_add_rounded,
                   color: AppTheme.primary, size: 20)),
           const SizedBox(width: 10),
-          Expanded(child: Text('Inviter un visiteur',
+          Expanded(child: Text('Inviter un visiteur'.tr,
               style: AppFonts.title(size: 15))),
         ]),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -110,15 +112,14 @@ class FriendsScreen extends StatelessWidget {
                 const Icon(Icons.visibility_rounded,
                     color: AppTheme.primary, size: 16),
                 const SizedBox(width: 8),
-                Text('Accès visiteur (lecture seule)',
+                Text('Accès visiteur (lecture seule)'.tr,
                     style: AppFonts.label(
                         color: AppTheme.primary, size: 12)
                         .copyWith(fontWeight: FontWeight.w700)),
               ]),
               const SizedBox(height: 6),
               Text(
-                'Le visiteur peut consulter vos mesures et doses. '
-                    'Il ne peut pas modifier vos données.',
+                'Le visiteur peut consulter vos mesures et doses. Il ne peut pas modifier vos données.'.tr,
                 style: AppFonts.label(
                     color: AppTheme.primary.withOpacity(0.8), size: 11),
               ),
@@ -129,7 +130,7 @@ class FriendsScreen extends StatelessWidget {
             controller: emailCtrl,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-                labelText: 'Email du visiteur',
+                labelText: 'Email du visiteur'.tr,
                 hintText: 'medecin@exemple.com',
                 prefixIcon: const Icon(Icons.email_rounded, size: 18),
                 errorText: error),
@@ -141,18 +142,18 @@ class FriendsScreen extends StatelessWidget {
                 size: 14, color: Colors.grey),
             const SizedBox(width: 6),
             Expanded(child: Text(
-              'La personne doit avoir un compte Sahtek avec cet email.',
+              'La personne doit avoir un compte Sahtek avec cet email.'.tr,
               style: AppFonts.label(color: Colors.grey, size: 11),
             )),
           ]),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text('Annuler',
+              child: Text('Annuler'.tr,
                   style: AppFonts.body(color: Colors.grey))),
           ElevatedButton.icon(
             icon: const Icon(Icons.send_rounded, size: 15),
-            label: const Text('Inviter'),
+            label: Text('Inviter'.tr),
             onPressed: () async {
               set(() => error = null);
               try {
@@ -164,13 +165,13 @@ class FriendsScreen extends StatelessWidget {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        'Invitation envoyée à ${emailCtrl.text.trim()}'),
+                        'Invitation envoyée à {email}'.trp({'email': emailCtrl.text.trim()})),
                     backgroundColor: AppTheme.success,
                   ));
                 }
               } catch (e) {
                 set(() => error = e.toString()
-                    .replaceAll('Exception: ', ''));
+                    .replaceAll('Exception: ', '').tr);
               }
             },
           ),
@@ -196,8 +197,8 @@ class _MyVisitorsTab extends StatelessWidget {
         if (list.isEmpty) {
           return _EmptyState(
             icon: Icons.people_outline_rounded,
-            title: 'Aucun visiteur',
-            sub: 'Appuyez sur "Inviter" pour partager\nvos données en lecture seule.',
+            title: 'Aucun visiteur'.tr,
+            sub: 'Appuyez sur "Inviter" pour partager\nvos données en lecture seule.'.tr,
           );
         }
         return ListView.separated(
@@ -259,7 +260,7 @@ class _VisitorCard extends StatelessWidget {
                   const Icon(Icons.visibility_rounded,
                       size: 10, color: AppTheme.primary),
                   const SizedBox(width: 3),
-                  Text('Visiteur',
+                  Text('Visiteur'.tr,
                       style: AppFonts.label(
                           color: AppTheme.primary, size: 10)
                           .copyWith(fontWeight: FontWeight.w700)),
@@ -277,26 +278,26 @@ class _VisitorCard extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.delete_outline_rounded, size: 20),
           color: Colors.red.shade300,
-          tooltip: 'Retirer l\'accès',
+          tooltip: 'Retirer l\'accès'.tr,
           onPressed: () async {
             final ok = await showDialog<bool>(context: context,
               builder: (_) => AlertDialog(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
-                title: Text('Retirer l\'accès ?',
+                title: Text('Retirer l\'accès ?'.tr,
                     style: AppFonts.title(size: 15)),
                 content: Text(
-                    '${c.email} ne pourra plus voir vos données.',
+                    '{email} ne pourra plus voir vos données.'.trp({'email': c.email}),
                     style: AppFonts.body(size: 13)),
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Annuler')),
+                      child: Text('Annuler'.tr)),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.danger),
                     onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Retirer'),
+                    child: Text('Retirer'.tr),
                   ),
                 ],
               ),
@@ -327,8 +328,8 @@ class _InvitationsReceivedTab extends StatelessWidget {
         if (list.isEmpty) {
           return _EmptyState(
             icon: Icons.mail_outline_rounded,
-            title: 'Aucune invitation',
-            sub: 'Quand quelqu\'un vous invite,\nvous le verrez ici.',
+            title: 'Aucune invitation'.tr,
+            sub: 'Quand quelqu\'un vous invite,\nvous le verrez ici.'.tr,
           );
         }
         return ListView.separated(
@@ -367,7 +368,7 @@ class _InvitationCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Invitation reçue',
+            Text('Invitation reçue'.tr,
                 style: AppFonts.label(color: AppTheme.warning, size: 11)
                     .copyWith(fontWeight: FontWeight.w700)),
             Text(inv.ownerEmail,
@@ -376,7 +377,7 @@ class _InvitationCard extends StatelessWidget {
           ])),
         ]),
         const SizedBox(height: 8),
-        Text('vous invite à consulter ses données médicales en lecture seule.',
+        Text('vous invite à consulter ses données médicales en lecture seule.'.tr,
             style: AppFonts.body(size: 13)),
         const SizedBox(height: 6),
         // Badge visiteur
@@ -389,7 +390,7 @@ class _InvitationCard extends StatelessWidget {
             const Icon(Icons.visibility_rounded,
                 size: 12, color: AppTheme.primary),
             const SizedBox(width: 5),
-            Text('Accès visiteur — lecture seule uniquement',
+            Text('Accès visiteur — lecture seule uniquement'.tr,
                 style: AppFonts.label(
                     color: AppTheme.primary, size: 11)
                     .copyWith(fontWeight: FontWeight.w600)),
@@ -402,7 +403,7 @@ class _InvitationCard extends StatelessWidget {
               await FirebaseService.instance.rejectInvitation(inv.id);
             },
             icon: const Icon(Icons.close_rounded, size: 15),
-            label: const Text('Refuser'),
+            label: Text('Refuser'.tr),
             style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.danger),
                 foregroundColor: AppTheme.danger),
@@ -413,15 +414,15 @@ class _InvitationCard extends StatelessWidget {
               await FirebaseService.instance.acceptInvitation(inv.id);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Invitation acceptée !'),
+                  SnackBar(
+                    content: Text('Invitation acceptée !'.tr),
                     backgroundColor: AppTheme.success,
                   ),
                 );
               }
             },
             icon: const Icon(Icons.check_rounded, size: 15),
-            label: const Text('Accepter'),
+            label: Text('Accepter'.tr),
           )),
         ]),
       ]),

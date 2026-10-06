@@ -8,6 +8,7 @@ import '../providers/insulin_provider.dart';
 import '../services/notification_service.dart';
 import '../services/ocr_service.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 /// Bottom sheet pour ajouter une mesure glycémie ou une dose insuline
 class AddReadingSheet extends StatefulWidget {
@@ -91,11 +92,11 @@ class _AddReadingSheetState extends State<AddReadingSheet>
             labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             dividerColor: Colors.transparent,
-            tabs: const [
+            tabs: [
               Tab(icon: Icon(Icons.water_drop_rounded, size: 18),
-                  text: 'Glycémie'),
+                  text: 'Glycémie'.tr),
               Tab(icon: Icon(Icons.medication_liquid_rounded, size: 18),
-                  text: 'Insuline'),
+                  text: 'Insuline'.tr),
             ],
           ),
         ),
@@ -125,7 +126,7 @@ class _AddReadingSheetState extends State<AddReadingSheet>
           child: Row(children: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Annuler',
+              child: Text('Annuler'.tr,
                   style: AppFonts.body(color: Colors.grey)),
             ),
             const SizedBox(width: 10),
@@ -135,7 +136,7 @@ class _AddReadingSheetState extends State<AddReadingSheet>
                   ? const SizedBox(width: 20, height: 20,
                   child: CircularProgressIndicator(
                       color: Colors.white, strokeWidth: 2))
-                  : const Text('Enregistrer'),
+                  : Text('Enregistrer'.tr),
             )),
           ]),
         ),
@@ -208,18 +209,18 @@ class _AddReadingSheetState extends State<AddReadingSheet>
             result.value! < 35 ? 1 : 0);
         setState(() {
           _scanning = false;
-          _ocrMessage = '✓ Valeur détectée : ${_glycCtrl.text}';
+          _ocrMessage = '✓ Valeur détectée : {v}'.trp({'v': _glycCtrl.text});
         });
       } else {
         setState(() {
           _scanning = false;
-          _ocrMessage = result.errorMessage ?? 'Valeur non reconnue';
+          _ocrMessage = result.errorMessage ?? 'Valeur non reconnue'.tr;
         });
       }
     } catch (e) {
       if (mounted) setState(() {
         _scanning = false;
-        _ocrMessage = 'Erreur : $e';
+        _ocrMessage = 'Erreur : {e}'.trp({'e': e});
       });
     }
   }
@@ -274,7 +275,7 @@ class _GlucoseForm extends StatelessWidget {
                   decoration: BoxDecoration(
                       color: sel ? AppTheme.primary : Colors.transparent,
                       borderRadius: BorderRadius.circular(9)),
-                  child: Text(conv ? 'Convertie (×0.18)' : 'Valeur directe',
+                  child: Text(conv ? 'Convertie (×0.18)'.tr : 'Valeur directe'.tr,
                       textAlign: TextAlign.center,
                       style: AppFonts.label(
                           color: sel ? Colors.white : Colors.grey, size: 12)
@@ -296,7 +297,7 @@ class _GlucoseForm extends StatelessWidget {
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
               style: AppFonts.bold(size: 18),
               decoration: InputDecoration(
-                labelText: 'Valeur glycémie',
+                labelText: 'Valeur glycémie'.tr,
                 suffixText: isConverted ? 'mmol/L' : 'Mg/dl',
                 suffixStyle: AppFonts.bold(color: AppTheme.primary, size: 13),
               ),
@@ -327,7 +328,7 @@ class _GlucoseForm extends StatelessWidget {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: AppTheme.primary)),
               const SizedBox(width: 10),
-              Text('Analyse en cours…',
+              Text('Analyse en cours…'.tr,
                   style: AppFonts.label(color: AppTheme.primary, size: 13)),
             ]),
           ),
@@ -385,21 +386,21 @@ class _GlucoseForm extends StatelessWidget {
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
           value: mealContext,
-          decoration: const InputDecoration(labelText: 'Contexte'),
-          items: const [
-            DropdownMenuItem(value: 'fasting',     child: Text('À jeun')),
-            DropdownMenuItem(value: 'before_meal', child: Text('Avant repas')),
-            DropdownMenuItem(value: 'after_meal',  child: Text('Après repas (2h)')),
-            DropdownMenuItem(value: 'bedtime',     child: Text('Avant coucher')),
-            DropdownMenuItem(value: 'sensor',      child: Text('Capteur CGM')),
+          decoration: InputDecoration(labelText: 'Contexte'.tr),
+          items: [
+            DropdownMenuItem(value: 'fasting',     child: Text('À jeun'.tr)),
+            DropdownMenuItem(value: 'before_meal', child: Text('Avant repas'.tr)),
+            DropdownMenuItem(value: 'after_meal',  child: Text('Après repas (2h)'.tr)),
+            DropdownMenuItem(value: 'bedtime',     child: Text('Avant coucher'.tr)),
+            DropdownMenuItem(value: 'sensor',      child: Text('Capteur CGM'.tr)),
           ],
           onChanged: (v) { if (v != null) onMealContextChanged(v); },
         ),
         const SizedBox(height: 10),
         TextField(
           controller: noteCtrl,
-          decoration: const InputDecoration(
-              labelText: 'Note (optionnel)',
+          decoration: InputDecoration(
+              labelText: 'Note (optionnel)'.tr,
               prefixIcon: Icon(Icons.notes_rounded, size: 18)),
         ),
       ]),
@@ -422,7 +423,7 @@ class _OcrButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'Photographier le glucomètre',
+      message: 'Photographier le glucomètre'.tr,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -471,23 +472,23 @@ class _OcrButton extends StatelessWidget {
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 16),
-            Text('Lire le glucomètre',
+            Text('Lire le glucomètre'.tr,
                 style: AppFonts.title(size: 16)),
             const SizedBox(height: 6),
-            Text('Photographiez l\'écran de votre appareil.',
+            Text('Photographiez l\'écran de votre appareil.'.tr,
                 style: AppFonts.body(color: Colors.grey, size: 13)),
             const SizedBox(height: 20),
             Row(children: [
               Expanded(child: _SourceTile(
                 icon: Icons.camera_alt_rounded,
-                label: 'Prendre une\nphoto',
+                label: 'Prendre une\nphoto'.tr,
                 color: AppTheme.primary,
                 onTap: () { Navigator.pop(context); onCamera(); },
               )),
               const SizedBox(width: 12),
               Expanded(child: _SourceTile(
                 icon: Icons.photo_library_rounded,
-                label: 'Depuis la\ngalerie',
+                label: 'Depuis la\ngalerie'.tr,
                 color: AppTheme.secondary,
                 onTap: () { Navigator.pop(context); onGallery(); },
               )),
@@ -555,25 +556,25 @@ class _InsulinForm extends StatelessWidget {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
           style: AppFonts.bold(size: 18),
-          decoration: const InputDecoration(
-              labelText: 'Dose d\'insuline', suffixText: 'UI'),
+          decoration: InputDecoration(
+              labelText: 'Dose d\'insuline'.tr, suffixText: 'UI'),
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           value: insulinType,
-          decoration: const InputDecoration(labelText: 'Type d\'insuline'),
-          items: const [
-            DropdownMenuItem(value: 'rapid', child: Text('Rapide (bolus)')),
-            DropdownMenuItem(value: 'slow',  child: Text('Lente (basal)')),
-            DropdownMenuItem(value: 'mixed', child: Text('Mixte')),
+          decoration: InputDecoration(labelText: 'Type d\'insuline'.tr),
+          items: [
+            DropdownMenuItem(value: 'rapid', child: Text('Rapide (bolus)'.tr)),
+            DropdownMenuItem(value: 'slow',  child: Text('Lente (basal)'.tr)),
+            DropdownMenuItem(value: 'mixed', child: Text('Mixte'.tr)),
           ],
           onChanged: (v) { if (v != null) onTypeChanged(v); },
         ),
         const SizedBox(height: 12),
         TextField(
           controller: noteCtrl,
-          decoration: const InputDecoration(
-              labelText: 'Note (optionnel)',
+          decoration: InputDecoration(
+              labelText: 'Note (optionnel)'.tr,
               prefixIcon: Icon(Icons.notes_rounded, size: 18)),
         ),
         const SizedBox(height: 12),
@@ -588,7 +589,7 @@ class _InsulinForm extends StatelessWidget {
                 color: AppTheme.primary, size: 16),
             const SizedBox(width: 8),
             Expanded(child: Text(
-              'La dose est enregistrée telle quelle en unités internationales (UI).',
+              'La dose est enregistrée telle quelle en unités internationales (UI).'.tr,
               style: AppFonts.label(color: AppTheme.primary, size: 11),
             )),
           ]),

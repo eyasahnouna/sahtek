@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../l10n/l10n.dart';
 
 class AppTheme {
   AppTheme._();
@@ -32,10 +33,10 @@ class AppTheme {
 
   /// Retourne le label textuel selon la valeur Mg/dl
   static String glucoseLabel(double value) {
-    if (value < 0.7)  return 'Hypoglycémie';
-    if (value <= 1.6) return 'Normale';
-    if (value <= 1.9) return 'Légèrement élevée';
-    return 'Hyperglycémie';
+    if (value < 0.7)  return 'Hypoglycémie'.tr;
+    if (value <= 1.6) return 'Normale'.tr;
+    if (value <= 1.9) return 'Légèrement élevée'.tr;
+    return 'Hyperglycémie'.tr;
   }
 
   // ── Système typographique Poppins ─────────────────────────────
@@ -304,8 +305,8 @@ Color glucoseColorOf(double value) {
 }
 
 String glucoseLabelOf(double value) {
-  if (value < 0.7) return 'Hypoglycémie';
-  if (value <= 1.6) return 'Normale';
-  if (value <= 1.9) return 'Légèrement élevée';
-  return 'Hyperglycémie';
+  if (value < 0.7) return 'Hypoglycémie'.tr;
+  if (value <= 1.6) return 'Normale'.tr;
+  if (value <= 1.9) return 'Légèrement élevée'.tr;
+  return 'Hyperglycémie'.tr;
 }

@@ -10,6 +10,7 @@ import '../screens/pdf_viewer_screen.dart';
 import '../services/firebase_service.dart';
 import '../services/report_service.dart';
 import '../utils/app_theme.dart';
+import '../l10n/l10n.dart';
 
 // ── Indicateur glycémie (extrait de dose_badge pour éviter la dépendance) ─────
 class _GlyIndicator {
@@ -54,7 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       final records = provider.allRecords;
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Dashboard'),
+          title: Text('Dashboard'.tr),
           actions: const [LogoutIconButton()],
           bottom: TabBar(
             controller: _tabs,
@@ -65,21 +66,22 @@ class _DashboardScreenState extends State<DashboardScreen>
             labelStyle: AppFonts.label(size: 13)
                 .copyWith(fontWeight: FontWeight.w600),
             unselectedLabelStyle: AppFonts.label(size: 13),
-            tabs: const [
+            tabs: [
               Tab(icon: Icon(Icons.today_rounded, size: 18),
-                  text: 'Par journée'),
+                  text: 'Par journée'.tr),
               Tab(icon: Icon(Icons.calendar_month_rounded, size: 18),
-                  text: 'Par mois'),
+                  text: 'Par mois'.tr),
             ],
           ),
         ),
         floatingActionButton: records.isEmpty
             ? null
             : FloatingActionButton.extended(
+              heroTag: 'fab_dashboard_report',
                 onPressed: () => _openMyReport(context, records),
                 backgroundColor: AppTheme.primary,
                 icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
-                label: Text('Mon rapport',
+                label: Text('Mon rapport'.tr,
                     style: AppFonts.label(color: Colors.white, size: 13)
                         .copyWith(fontWeight: FontWeight.w600)),
               ),
@@ -100,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     final uid  = FirebaseService.instance.currentUid ?? '';
     final name = uid.isNotEmpty
         ? await FirebaseService.instance.getUserName(uid)
-        : (FirebaseService.instance.currentEmail?.split('@').first ?? 'Patient');
+        : (FirebaseService.instance.currentEmail?.split('@').first ?? 'Patient'.tr);
 
     if (!context.mounted) return;
     Navigator.push(context, MaterialPageRoute(
@@ -181,8 +183,8 @@ class _DateSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final isToday = DateUtils.isSameDay(selectedDate, DateTime.now());
     return Row(children: [
-      Text(isToday ? "Aujourd'hui"
-          : DateFormat('d MMMM yyyy', 'fr_FR').format(selectedDate),
+      Text(isToday ? "Aujourd'hui".tr
+          : DateFormat('d MMMM yyyy', L10n.dateLocale).format(selectedDate),
           style: AppFonts.title(size: 15)),
       const Spacer(),
       GestureDetector(
@@ -212,7 +214,7 @@ class _DateSelector extends StatelessWidget {
             const Icon(Icons.calendar_today_rounded,
                 size: 14, color: AppTheme.primary),
             const SizedBox(width: 6),
-            Text('Changer',
+            Text('Changer'.tr,
                 style: AppFonts.label(color: AppTheme.primary, size: 12)
                     .copyWith(fontWeight: FontWeight.w600)),
           ]),
@@ -244,12 +246,12 @@ class _DayChartCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Mesures de la journée', style: AppFonts.title(size: 14)),
+          Text('Mesures de la journée'.tr, style: AppFonts.title(size: 14)),
           const SizedBox(height: 6),
           Wrap(spacing: 12, runSpacing: 4, children: [
-            _LegendDot(color: AppTheme.primary, label: 'Glycémie'),
+            _LegendDot(color: AppTheme.primary, label: 'Glycémie'.tr),
             _LegendDot(color: const Color(0xFF16A34A),
-                label: 'Zone normale (0.7–1.6)', dashed: true),
+                label: 'Zone normale (0.7–1.6)'.tr, dashed: true),
           ]),
           const SizedBox(height: 16),
           SizedBox(
@@ -326,7 +328,7 @@ class _DayChartCard extends StatelessWidget {
                       final time  = entry.mealTime ?? entry.doseTime;
                       final label = time != null
                           ? '${time.hour.toString().padLeft(2, '0')}h'
-                          : entry.name.substring(0, 3);
+                          : entry.name.tr.characters.take(3).toString();
                       return Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(label, style: AppFonts.label(
@@ -344,11 +346,11 @@ class _DayChartCard extends StatelessWidget {
                       final entry = i < measured.length ? measured[i] : null;
                       final ind = _GlyIndicator.of(s.y);
                       return LineTooltipItem(
-                        '${s.y.toStringAsFixed(2)} Mg/dl\n${entry?.name ?? ''}',
+                        '${s.y.toStringAsFixed(2)} Mg/dl\n${entry?.name.tr ?? ''}',
                         AppFonts.bold(color: Colors.white, size: 11),
                         children: [
                           TextSpan(
-                            text: '\n${ind.label}',
+                            text: '\n${ind.label.tr}',
                             style: AppFonts.label(
                                 color: Colors.white70, size: 10),
                           ),
@@ -414,14 +416,14 @@ class _DayTable extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Tableau des valeurs',
+          Text('Tableau des valeurs'.tr,
               style: AppFonts.title(size: 14)),
           const SizedBox(height: 12),
 
           entries.isEmpty
               ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(child: Text('Aucune mesure pour cette journée',
+              child: Center(child: Text('Aucune mesure pour cette journée'.tr,
                   style: AppFonts.body(
                       color: Colors.grey.shade400, size: 13))))
               : Column(children: [
@@ -446,15 +448,15 @@ class _TableHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     const s = TextStyle(fontSize: 11, fontWeight: FontWeight.w700);
     return Row(children: [
-      Expanded(flex: 3, child: Text('Repas',
+      Expanded(flex: 3, child: Text('Repas'.tr,
           style: s.copyWith(color: Colors.grey.shade500))),
-      Expanded(flex: 2, child: Text('Glycémie',
+      Expanded(flex: 2, child: Text('Glycémie'.tr,
           textAlign: TextAlign.center,
           style: s.copyWith(color: Colors.grey.shade500))),
-      Expanded(flex: 2, child: Text('Dose UI',
+      Expanded(flex: 2, child: Text('Dose UI'.tr,
           textAlign: TextAlign.center,
           style: s.copyWith(color: Colors.grey.shade500))),
-      Expanded(flex: 2, child: Text('Statut',
+      Expanded(flex: 2, child: Text('Statut'.tr,
           textAlign: TextAlign.center,
           style: s.copyWith(color: Colors.grey.shade500))),
     ]);
@@ -477,10 +479,10 @@ class _TableRow extends StatelessWidget {
   }
 
   String _shortLabel(String l) {
-    if (l.contains('sévère')) return 'Hypogly.';
-    if (l.contains('Hyper'))  return 'Hypergly.';
-    if (l.contains('élevée')) return 'Élevée';
-    return 'Normal';
+    if (l.contains('sévère')) return 'Hypogly.'.tr;
+    if (l.contains('Hyper'))  return 'Hypergly.'.tr;
+    if (l.contains('élevée')) return 'Élevée'.tr;
+    return 'Normal'.tr;
   }
 
   @override
@@ -505,7 +507,7 @@ class _TableRow extends StatelessWidget {
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(entry.name,
+              Text(entry.name.tr,
                   style: AppFonts.label(size: 12)
                       .copyWith(fontWeight: FontWeight.w600,
                       color: Colors.grey.shade800),
@@ -575,7 +577,7 @@ class _TableFooter extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(children: [
-        Expanded(flex: 3, child: Text('TOTAL / MOY.',
+        Expanded(flex: 3, child: Text('TOTAL / MOY.'.tr,
             style: AppFonts.label(color: Colors.white70, size: 11)
                 .copyWith(fontWeight: FontWeight.w700))),
         Expanded(flex: 2, child: Center(child: Text(
@@ -595,7 +597,7 @@ class _TableFooter extends StatelessWidget {
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(ind.icon, size: 9, color: Colors.white),
               const SizedBox(width: 2),
-              Text('Moy.', style: AppFonts.label(
+              Text('Moy.'.tr, style: AppFonts.label(
                   color: Colors.white, size: 8)
                   .copyWith(fontWeight: FontWeight.w600)),
             ]))
@@ -676,7 +678,7 @@ class _MonthNavigator extends StatelessWidget {
           icon: const Icon(Icons.chevron_left_rounded, size: 26),
           color: AppTheme.primary),
       Expanded(child: Text(
-          DateFormat('MMMM yyyy', 'fr_FR').format(month),
+          DateFormat('MMMM yyyy', L10n.dateLocale).format(month),
           textAlign: TextAlign.center,
           style: AppFonts.title(size: 16)
               .copyWith(color: AppTheme.primary))),
@@ -706,19 +708,19 @@ class _MonthSummary extends StatelessWidget {
     return Row(children: [
       Expanded(child: _SummaryTile(
           icon: Icons.medication_liquid_rounded,
-          label: 'Dose totale mois',
+          label: 'Dose totale mois'.tr,
           value: totalDose > 0 ? totalDose.toStringAsFixed(1) : '--',
           unit: 'UI', color: AppTheme.primary)),
       const SizedBox(width: 10),
       Expanded(child: _SummaryTile(
           icon: Icons.medication_rounded,
-          label: 'Dose moy./jour',
+          label: 'Dose moy./jour'.tr,
           value: avgDose > 0 ? avgDose.toStringAsFixed(1) : '--',
           unit: 'UI', color: AppTheme.secondary)),
       const SizedBox(width: 10),
       Expanded(child: _SummaryTile(
           icon: Icons.bloodtype_rounded,
-          label: 'Glycémie moy.',
+          label: 'Glycémie moy.'.tr,
           value: avgGly > 0 ? avgGly.toStringAsFixed(2) : '--',
           unit: 'Mg/dl',
           color: ind?.color ?? Colors.grey,
@@ -804,20 +806,20 @@ class _MonthChart extends StatelessWidget {
     return Card(child: Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Doses & glycémie du mois',
+        Text('Doses & glycémie du mois'.tr,
             style: AppFonts.title(size: 14)),
         const SizedBox(height: 6),
         Wrap(spacing: 12, runSpacing: 6, children: [
-          _LegendDot(color: AppTheme.primary, label: 'Dose (UI)'),
-          _LegendDot(color: AppTheme.secondary, label: 'Glycémie (Mg/dl)'),
+          _LegendDot(color: AppTheme.primary, label: 'Dose (UI)'.tr),
+          _LegendDot(color: AppTheme.secondary, label: 'Glycémie (Mg/dl)'.tr),
           _LegendDot(color: const Color(0xFF16A34A),
-              label: 'Zone normale', dashed: true),
+              label: 'Zone normale'.tr, dashed: true),
         ]),
         const SizedBox(height: 16),
 
         doseSpots.isEmpty && glycSpots.isEmpty
             ? SizedBox(height: 100, child: Center(
-            child: Text('Aucune donnée ce mois',
+            child: Text('Aucune donnée ce mois'.tr,
                 style: AppFonts.body(
                     color: Colors.grey.shade400, size: 13))))
             : SizedBox(height: 220, child: LineChart(
@@ -885,9 +887,10 @@ class _MonthChart extends StatelessWidget {
                       final isGly = s.barIndex == 1;
                       final day   = s.x.toInt() + 1;
                       return LineTooltipItem(
-                        '${isGly ? "Glycémie" : "Dose"}: '
+                        '${isGly ? 'Glycémie'.tr : 'Dose'.tr}: '
                             '${s.y.toStringAsFixed(2)}'
-                            '${isGly ? " Mg/dl" : " UI"}\nJour $day',
+                            '${isGly ? " Mg/dl" : " UI"}\n'
+                            '${'Jour {day}'.trp({'day': day})}',
                         AppFonts.bold(color: Colors.white, size: 11),
                       );
                     }).toList(),
@@ -987,7 +990,7 @@ class _IndicatorLegend extends StatelessWidget {
             const Icon(Icons.info_outline_rounded,
                 size: 14, color: AppTheme.primary),
             const SizedBox(width: 6),
-            Text('Indicateurs glycémie (Mg/dl)',
+            Text('Indicateurs glycémie (Mg/dl)'.tr,
                 style: AppFonts.label(color: AppTheme.primary, size: 12)
                     .copyWith(fontWeight: FontWeight.w600)),
           ]),
@@ -1006,7 +1009,7 @@ class _IndicatorLegend extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: item.color, shape: BoxShape.circle)),
                   const SizedBox(width: 6),
-                  Text('${item.label}  –  ${item.desc}',
+                  Text('${item.label}  –  ${item.desc.tr}',
                       style: AppFonts.label(color: item.color, size: 11)
                           .copyWith(fontWeight: FontWeight.w600)),
                 ]),
@@ -1027,10 +1030,10 @@ class _EmptyState extends StatelessWidget {
       Icon(Icons.insert_chart_outlined_rounded,
           size: 90, color: Colors.grey.shade300),
       const SizedBox(height: 16),
-      Text('Aucune donnée disponible',
+      Text('Aucune donnée disponible'.tr,
           style: AppFonts.title(color: Colors.grey.shade500, size: 18)),
       const SizedBox(height: 8),
-      Text('Enregistrez vos mesures dans l\'onglet Journée.',
+      Text('Enregistrez vos mesures dans l\'onglet Journée.'.tr,
           textAlign: TextAlign.center,
           style: AppFonts.body(color: Colors.grey.shade400, size: 14)),
     ],

@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../l10n/l10n.dart';
 
 /// Représente une injection d'insuline
 class InsulinDose {
@@ -20,9 +21,9 @@ class InsulinDose {
 
   String get insulinTypeLabel {
     switch (insulinType) {
-      case 'rapid': return 'Rapide (bolus)';
-      case 'slow':  return 'Lente (basal)';
-      case 'mixed': return 'Mixte';
+      case 'rapid': return 'Rapide (bolus)'.tr;
+      case 'slow':  return 'Lente (basal)'.tr;
+      case 'mixed': return 'Mixte'.tr;
       default:      return insulinType;
     }
   }
